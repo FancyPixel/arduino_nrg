@@ -1,13 +1,14 @@
 
 # Configure serial port and path to the toolchain, acording to your settings
 SERPORT = /dev/tty.usbserial-DA0145BO
+# SERPORT = /dev/tty.usbserial
 ARDUINO_ROOT = ~/Library/Arduino15
 TOOLCHAIN = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/msp430-
 JAVA_BSL = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/java-bsl/1.0.0/BsLoader.jar
 
 MCU = cc430f5137
 # SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp swap.cpp
-SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp
+SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp cc430uart.cpp wiring.cpp Stream.cpp HardwareSerial.cpp Print.cpp
 
 IDIR = -I../../../../tools/msp430/msp430/include
 
@@ -54,3 +55,6 @@ gdb-flash:
 
 bsl-flash:
 	java -jar $(JAVA_BSL) $(PROG).hex $(SERPORT) --verif-off --verbose-on
+
+upload:
+	java -jar $(JAVA_BSL) /var/folders/8s/6k3r4rt57r38rl8r4ngd6j780000gn/T/arduino_build_414041/ntc.ino.hex $(SERPORT) --verif-off --verbose-on 	
