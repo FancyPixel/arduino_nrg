@@ -25,12 +25,14 @@
 #ifndef _RFLOADER_H
 #define _RFLOADER_H
 
+#include <string.h>
 #include "cc430f5137.h"
 #include "pmm.h"
 #include "cc430flash.h"
 #include "memconfig.h"
 #include "timer1a0.h"
 #include "gwap.h"
+#include "utils.h"
 
 /**
  * Uncomment only in case of using GDB bootloader
@@ -45,7 +47,7 @@ uint8_t DEFAULT_PRODUCT_CODE[] = {0,0,0,1,0xFF,0,0,0};
  * GWAP status packets
  */
 // Transmit GWAP product code
-#define TRANSMIT_GWAP_STATUS_PCODE(state)     gwap.sendPacket((uint8_t)GWAPFUNCT_STA, (uint8_t)REGI_PRODUCTCODE, DEFAULT_PRODUCT_CODE, sizeof(DEFAULT_PRODUCT_CODE))
+#define TRANSMIT_GWAP_STATUS_PCODE()     gwap.sendPacket((uint8_t)GWAPFUNCT_STA, (uint8_t)REGI_PRODUCTCODE, DEFAULT_PRODUCT_CODE, sizeof(DEFAULT_PRODUCT_CODE))
 // Transmit GWAP state
 #define TRANSMIT_GWAP_STATUS_STATE(state)     gwap.sendPacketVal((uint8_t)GWAPFUNCT_STA, (uint8_t)REGI_SYSSTATE, state)
 // Query product code from node with address 1
@@ -58,9 +60,20 @@ uint8_t DEFAULT_PRODUCT_CODE[] = {0,0,0,1,0xFF,0,0,0};
 /**
  * LED operations
  */
-#define CONFIG_LED()  PJDIR |= BIT1
-#define LED_ON()      PJOUT |= BIT1
-#define LED_OFF()     PJOUT &= ~BIT1
+// #define CONFIG_LED()  PJDIR |= BIT1
+// #define LED_ON()      PJOUT |= BIT1
+// #define LED_OFF()     PJOUT &= ~BIT1
+
+// /**
+//  * NRG2 LED operations
+//  */
+#define CONFIG_LED()  P3DIR |= BIT7; P3OUT &= ~BIT7
+#define LED_ON()      P3OUT |= BIT7
+#define LED_OFF()     P3OUT &= ~BIT7
+
+#define CONFIG_MORSE_OUT()  P1DIR |= BIT7; P1OUT &= ~BIT7
+#define MORSE_OUT_ON()      P1OUT |= BIT7
+#define MORSE_OUT_OFF()     P1OUT &= ~BIT7
 
 /**
  * Type of HEX file record
@@ -151,7 +164,8 @@ void jumpToUserCode(void);
  *
  * @param n clock cycles to wait
  */
-ALWAYS_INLINE
+// ALWAYS_INLINE
 void delayClockCycles(register uint32_t n);
+
 
 #endif

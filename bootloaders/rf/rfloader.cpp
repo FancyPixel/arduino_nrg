@@ -21,8 +21,8 @@
  * Author: Daniel Berenguer
  * Creation date: 04/01/2014
  */
-#include "HardwareSerial.h"
 #include "rfloader.h"
+
 // Responses from server have to be received before 10000 ms after sending
 // the query
 #define RESPONSE_TIMEOUT  10000
@@ -90,13 +90,6 @@ bool readHexLine(uint16_t lineNumber)
   return false;
 }
 
-void blink() {
-  uint32_t i;
-  LED_ON();
-  for(i = 0; i < 2500000000; i++) {}
-  LED_OFF();
-}
-
 /**
  * main
  *
@@ -104,16 +97,17 @@ void blink() {
  */
 int main(void)
 {
-  // Serial.begin(38400);
   uint8_t state, status, bytes, i, count=0;
   // Current firmware line being queried from hex file
   uint16_t lineNumber = 0;
-  // Serial.println("Before CONFIG_LED");
-  // delay(10);
 
   CONFIG_LED();
+  CONFIG_MORSE_OUT();
 
-  blink();
+  startCommunication();
+  endCommunication();
+
+  flashMorseString("started");
 
   // This flag will tell us whether wireless bootloading needs to start or not
   bool * ptr1;
@@ -128,11 +122,6 @@ int main(void)
   // Disable interrupts
   __disable_interrupt();
 
-  // digitalWrite(LED, HIGH);
-  // delay(400);
-  // digitalWrite(LED, LOW);
-  // delay(400);
-
   // Serial.println("Before initCore");
   // Init core
   initCore();
@@ -142,8 +131,8 @@ int main(void)
   if (userCodeAddr != 0xFFFF)
   {
     // Jump to user code if the wireless bootloader was not called from there
-    // if (runUserCode)
-      // jumpToUserCode();
+    if (runUserCode)
+      jumpToUserCode();
   }
 
   // digitalWrite(LED, HIGH);
@@ -156,16 +145,21 @@ int main(void)
 
   // Serial.println("Before gwap init");
   // Init GWAP comms
-  // gwap.init();
+  gwap.init();
 
   // Serial.println("After gwap init");
   // Transmit default product code only if no user application is still flashed
-  if (userCodeAddr == 0xFFFF)
+  if (userCodeAddr == 0xFFFF) {
     TRANSMIT_GWAP_STATUS_PCODE();
+  }
+
+  blink(3, 100);
 
   // Enter upgrade mode
   state = (uint8_t)SYSTATE_UPGRADE;
   TRANSMIT_GWAP_STATUS_STATE(state);
+
+  blink(3, 100);
 
   // Pointer at the begining of user flash
   uint16_t address = USER_ROMADDR;
@@ -182,9 +176,8 @@ int main(void)
       if (count++ == MAX_REPEAT_QUERY)
       {
         // If the flash was not erased then start user code
-        if (firstLine) {
-          // jumpToUserCode();          
-        }
+        if (firstLine)
+          jumpToUserCode();
         // Otherwise continue forever asking
       }
 
@@ -231,7 +224,7 @@ int main(void)
           if (addrFromHexFile != address)
           {
             // Jump to user code
-            // jumpToUserCode();
+            jumpToUserCode();
           }
           else  // Starting address is OK
           {
@@ -293,7 +286,7 @@ int main(void)
           flash.write((uint8_t *)(VECTOR_TABLE_ADDR + i*0x10), isrTable[i], sizeof(isrTable[i]));
 
         // Jump to user code
-        // jumpToUserCode();
+        jumpToUserCode();
       }
     }
   }
