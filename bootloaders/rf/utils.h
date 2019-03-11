@@ -1,8 +1,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include <string.h>
-#include <stdlib.h>
+
 #include "cc430f5137.h"
 #include "pmm.h"
 #include "cc430flash.h"

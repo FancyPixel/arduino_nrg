@@ -108,6 +108,7 @@ int main(void)
   endCommunication();
 
   flashMorseString("started");
+  flashMorseString(10);
 
   // This flag will tell us whether wireless bootloading needs to start or not
   bool * ptr1;

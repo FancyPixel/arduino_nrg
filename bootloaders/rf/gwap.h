@@ -25,12 +25,11 @@
 #ifndef _GWAP_H
 #define _GWAP_H
 
-#include "datatypes.h"
-#include "cc430flash.h"
+
 #include "cc430radio.h"
 #include "memconfig.h"
 #include "product.h"
-// #include "utils.h"
+#include "utils.h"
 
 /**
  * GWAP message functions

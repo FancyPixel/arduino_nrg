@@ -26,6 +26,15 @@ void blink(int times, int time = 500) {
   }
 }
 
+int stringLen(char* string) {
+  int i = 0;
+  while (string[i] != '\0') {
+    i++;
+  }
+  
+  return i;
+}
+
 // Morse code stuff
 
 char* char2morse(char c) {
@@ -180,7 +189,7 @@ void morseBlink(int duration) {
 
 void flashMorseChar(char c) {
   char* morseChar = char2morse(c);
-  int morseCodeSize = strlen(morseChar);
+  int morseCodeSize = stringLen(morseChar);
   for(int i = 0; i < morseCodeSize; i++) {
     if (morseChar[i] == '.') {
       morseBlink(DOT_DURATION);
@@ -196,7 +205,7 @@ void flashMorseChar(char c) {
 
 
 void flashMorseString(char* text) {
-  int size = strlen(text);
+  int size = stringLen(text);
 
   startCommunication();
 
@@ -213,7 +222,34 @@ void flashMorseString(char* text) {
   endCommunication();
 }
 
-void flashMorseString(int i) {
-  char buf[50];
-  flashMorseString(itoa(i, buf, 10));
+void flashMorseString(int n) {
+  char buffer[50];
+  int i = 0;
+
+  bool isNeg = n < 0;
+
+  unsigned int n1 = isNeg ? -n : n;
+
+  while (n1 != 0) {
+    buffer[i++] = n1 % 10 + '0';
+    n1 = n1 / 10;
+  }
+
+  if (isNeg)
+    buffer[i++] = '-';
+
+  buffer[i] = '\0';
+
+  for (int t = 0; t < i / 2; t++) {
+    buffer[t] ^= buffer[i - t - 1];
+    buffer[i - t - 1] ^= buffer[t];
+    buffer[t] ^= buffer[i - t - 1];
+  }
+
+  if (n == 0) {
+    buffer[0] = '0';
+    buffer[1] = '\0';
+  }
+
+  flashMorseString(buffer);
 }
