@@ -117,18 +117,19 @@ class GWAP
       // TODO get Product Code
       uint8_t len = sizeof(GWAP_PRODUCT_CODE);
       for(i = 0; i < len; i++) {
-        devAddress[i + GWAP_ADDRESS_LEN - len] = (GWAP_PRODUCT_CODE >> (8 * (len - 1 - i))) & 0xFF;
+//        devAddress[i + GWAP_ADDRESS_LEN - len] = (GWAP_PRODUCT_CODE >> (8 * (len - 1 - i))) & 0xFF;
+        devAddress[i + GWAP_ADDRESS_LEN - len] = GWAP_PRODUCT_CODE[i];
       }
 
       // Config radio settings
       radio.devAddress = devAddress[0];
 
       // Network ID
-      flash.read((uint8_t *)INFOMEM_SYNC_WORD, buf, 2);
-      if (buf[0] != 0xFF && buf[1] != 0xFF) {
-        radio.syncWord[0] = buf[0];
-        radio.syncWord[1] = buf[1];
-      }
+//      flash.read((uint8_t *)INFOMEM_SYNC_WORD, buf, 2);
+//      if (buf[0] != 0xFF && buf[1] != 0xFF) {
+//        radio.syncWord[0] = 0x6A;
+//        radio.syncWord[1] = 0x1C;
+//      }
 
       // Init radio module
       radio.init(freq);

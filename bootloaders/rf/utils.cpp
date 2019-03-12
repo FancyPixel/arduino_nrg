@@ -147,6 +147,48 @@ char* char2morse(char c) {
     case '9':
       return (char*)"----.";
 
+    case '\n':
+      return (char*)".-.-";
+
+    case ',':
+      return (char*)"--..--";
+
+    case '=':
+      return (char*)"-...-";
+
+    case '(':
+      return (char*)"-.--.";
+
+    case ')':
+      return (char*)"-.--.-";
+
+    case '.':
+      return (char*)".-.-.-";
+
+    case '-':
+      return (char*)"-....-";
+
+    case '+':
+      return (char*)".-.-.";
+
+    case '"':
+      return (char*)".-..-.";
+
+    case '?':
+      return (char*)"..--..";
+
+    case '/':
+      return (char*)"-..-.";
+
+    case '\'':
+      return (char*)".----.";
+
+    case '!':
+      return (char*)"-.-.--";
+
+    case '&':
+      return (char*)".-...";
+
     case ' ':
       return (char*)" ";
 

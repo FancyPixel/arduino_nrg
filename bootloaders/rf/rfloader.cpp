@@ -104,11 +104,11 @@ int main(void)
   CONFIG_LED();
   CONFIG_MORSE_OUT();
 
-  startCommunication();
-  endCommunication();
 
-  flashMorseString("started");
-  flashMorseString(10);
+  flashMorseString("start");
+
+//  flashMorseString(10);
+
 
   // This flag will tell us whether wireless bootloading needs to start or not
   bool * ptr1;
@@ -123,9 +123,11 @@ int main(void)
   // Disable interrupts
   __disable_interrupt();
 
+
   // Serial.println("Before initCore");
   // Init core
   initCore();
+
 
   // Serial.println("Before jumpToUserCode");
   // Valid starting address of user code?
@@ -144,6 +146,7 @@ int main(void)
   CC430FLASH flash;
   TIMER1A0 timer;
 
+
   // Serial.println("Before gwap init");
   // Init GWAP comms
   gwap.init();
@@ -154,13 +157,9 @@ int main(void)
     TRANSMIT_GWAP_STATUS_PCODE();
   }
 
-  blink(3, 100);
-
   // Enter upgrade mode
   state = (uint8_t)SYSTATE_UPGRADE;
   TRANSMIT_GWAP_STATUS_STATE(state);
-
-  blink(3, 100);
 
   // Pointer at the begining of user flash
   uint16_t address = USER_ROMADDR;

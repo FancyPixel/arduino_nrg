@@ -47,7 +47,7 @@ uint8_t DEFAULT_PRODUCT_CODE[] = {0,0,0,1,0xFF,0,0,0};
  * GWAP status packets
  */
 // Transmit GWAP product code
-#define TRANSMIT_GWAP_STATUS_PCODE()     gwap.sendPacket((uint8_t)GWAPFUNCT_STA, (uint8_t)REGI_PRODUCTCODE, DEFAULT_PRODUCT_CODE, sizeof(DEFAULT_PRODUCT_CODE))
+#define TRANSMIT_GWAP_STATUS_PCODE()     gwap.sendPacket((uint8_t)GWAPFUNCT_STA, (uint8_t)REGI_PRODUCTCODE, (uint8_t*)GWAP_PRODUCT_CODE, sizeof(GWAP_PRODUCT_CODE))
 // Transmit GWAP state
 #define TRANSMIT_GWAP_STATUS_STATE(state)     gwap.sendPacketVal((uint8_t)GWAPFUNCT_STA, (uint8_t)REGI_SYSSTATE, state)
 // Query product code from node with address 1

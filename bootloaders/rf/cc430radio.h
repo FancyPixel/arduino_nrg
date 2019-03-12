@@ -60,8 +60,8 @@ enum RFSTATE
 /**
  * CC430 configuration registers
  */
-#define CCDEF_SYNC1      0xB5   // Synchronization word, high byte
-#define CCDEF_SYNC0      0x47   // Synchronization word, low byte
+#define CCDEF_SYNC0      0x6A   // Synchronization word, low byte
+#define CCDEF_SYNC1      0x1C   // Synchronization word, high byte
 #define CCDEF_FSCTRL1    0x08   // Frequency synthesizer control
 #define CCDEF_FSCTRL0    0x00   // Frequency synthesizer control
 // Carrier frequency = 868 MHz
@@ -105,7 +105,7 @@ enum RFSTATE
 #define CCDEF_IOCFG0     0x06   // GDO0 output pin configuration. Refer to SmartRF® Studio User Manual for detailed pseudo register explanation.
 #define CCDEF_PKTCTRL1   0x06   // Packet automation control.
 #define CCDEF_PKTCTRL0   0x05   // Packet automation control.
-#define CCDEF_ADDR       0x77   // Device address.
+#define CCDEF_ADDR       0xFF   // Device address.
 #define CCDEF_PKTLEN     0x3D   // Packet length.
 
 /**

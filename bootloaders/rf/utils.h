@@ -16,7 +16,7 @@
 #define MORSE_OUT_ON()      P1OUT |= BIT7
 #define MORSE_OUT_OFF()     P1OUT &= ~BIT7
 
-#define DOT_DURATION 7
+#define DOT_DURATION 60
 
 void delayClockCycles(register uint32_t n);
 

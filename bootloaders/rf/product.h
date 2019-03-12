@@ -28,16 +28,19 @@
 /**
  * Hardware version
  */
-#define HARDWARE_VERSION        0x00000300L
+//#define HARDWARE_VERSION        0x00000300L
+const uint8_t HARDWARE_VERSION[] = { 0, 0, 3, 0 };
 
 /**
  * Firmware version
  */
-#define FIRMWARE_VERSION        0x00000100L
+//#define FIRMWARE_VERSION        0x00000100L
+const uint8_t FIRMWARE_VERSION[] = { 0, 0, 1, 0 };
 
 /**
  * Product code
  */
-#define GWAP_PRODUCT_CODE       0x00010004L
+//#define GWAP_PRODUCT_CODE       0x00010004L
+const uint8_t GWAP_PRODUCT_CODE[] = { 0, 1, 0, 4 };
 
 #endif

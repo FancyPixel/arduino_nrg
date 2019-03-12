@@ -41,12 +41,14 @@
  * 
  * Class constructor
  */
+
+// TODO: prova a modificare PA_LowPower con LongJohnson
 CC430RADIO::CC430RADIO(void)
 {
   carrierFreq = CFREQ_868;
   channel = CCDEF_CHANNR;
-  syncWord[0] = CCDEF_SYNC1;
-  syncWord[1] = CCDEF_SYNC0;
+  syncWord[0] = CCDEF_SYNC0;
+  syncWord[1] = CCDEF_SYNC1;
   devAddress = CCDEF_ADDR;
   paTableByte = PA_LowPower;            // Priority = Low power
 }
