@@ -32,7 +32,7 @@
 #include "memconfig.h"
 #include "timer1a0.h"
 #include "gwap.h"
-#include "utils.h"
+//#include "utils.h"
 
 /**
  * Uncomment only in case of using GDB bootloader

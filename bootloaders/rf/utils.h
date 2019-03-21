@@ -18,8 +18,6 @@
 
 #define DOT_DURATION 60
 
-void delayClockCycles(register uint32_t n);
-
 void delay(int millis);
 
 void blink(int times, int time);

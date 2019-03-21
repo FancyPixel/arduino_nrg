@@ -34,39 +34,36 @@
 /**
  * GWAP message functions
  */
-enum GWAPFUNCT
-{
-  GWAPFUNCT_STA = 0x00,
-  GWAPFUNCT_QRY,
-  GWAPFUNCT_CMD
+enum GWAPFUNCT {
+    GWAPFUNCT_STA = 0x00,
+    GWAPFUNCT_QRY,
+    GWAPFUNCT_CMD
 };
 
 /**
  * Register index
  */
-enum REGISTERS
-{
-  REGI_PRODUCTCODE = 0,
-  REGI_HWVERSION,
-  REGI_FWVERSION,
-  REGI_SYSSTATE,
-  REGI_FREQCHANNEL,
-  REGI_NETWORKID,
-  REGI_TXINTERVAL,
-  REGI_FIRMWARE
+enum REGISTERS {
+    REGI_PRODUCTCODE = 0,
+    REGI_HWVERSION,
+    REGI_FWVERSION,
+    REGI_SYSSTATE,
+    REGI_FREQCHANNEL,
+    REGI_NETWORKID,
+    REGI_TXINTERVAL,
+    REGI_FIRMWARE
 };
 
 /**
  * System states
  */
-enum SYSTATE
-{
-  SYSTATE_RESTART = 0,
-  SYSTATE_RXON,
-  SYSTATE_RXOFF,
-  SYSTATE_SYNC,
-  SYSTATE_LOWBAT,
-  SYSTATE_UPGRADE
+enum SYSTATE {
+    SYSTATE_RESTART = 0,
+    SYSTATE_RXON,
+    SYSTATE_RXOFF,
+    SYSTATE_SYNC,
+    SYSTATE_LOWBAT,
+    SYSTATE_UPGRADE
 };
 
 /**
@@ -87,9 +84,8 @@ enum SYSTATE
 #define GWAP_FUNCTION   data[13]
 #define GWAP_REGID      data[14]
 
-class GWAP
-{
-  public:
+class GWAP {
+public:
 
     /**
      * Radio object
@@ -102,21 +98,20 @@ class GWAP
     uint8_t devAddress[12];
 
     ALWAYS_INLINE
-    void init(uint8_t freq=CFREQ_868)
-    {
+    void init(uint8_t freq = CFREQ_868) {
       uint8_t buf[2];
       CC430FLASH flash;
       uint8_t i, tmp[8];
 
       // Build UID
       getUID(tmp);
-      for(i = 0 ; i < sizeof(tmp); i++) {
-        devAddress[i] = tmp[sizeof(tmp)-1-i];
+      for (i = 0; i < sizeof(tmp); i++) {
+        devAddress[i] = tmp[sizeof(tmp) - 1 - i];
       }
 
       // TODO get Product Code
       uint8_t len = sizeof(GWAP_PRODUCT_CODE);
-      for(i = 0; i < len; i++) {
+      for (i = 0; i < len; i++) {
 //        devAddress[i + GWAP_ADDRESS_LEN - len] = (GWAP_PRODUCT_CODE >> (8 * (len - 1 - i))) & 0xFF;
         devAddress[i + GWAP_ADDRESS_LEN - len] = GWAP_PRODUCT_CODE[i];
       }
@@ -127,8 +122,8 @@ class GWAP
       // Network ID
 //      flash.read((uint8_t *)INFOMEM_SYNC_WORD, buf, 2);
 //      if (buf[0] != 0xFF && buf[1] != 0xFF) {
-//        radio.syncWord[0] = 0x6A;
-//        radio.syncWord[1] = 0x1C;
+      radio.syncWord[0] = CCDEF_SYNC0;
+      radio.syncWord[1] = CCDEF_SYNC1;
 //      }
 
       // Init radio module
@@ -142,8 +137,7 @@ class GWAP
      *
      * @param buffer Pointer to the buffer that will receive the result
      */
-    inline void getUID(uint8_t *buffer)
-    {
+    inline void getUID(uint8_t *buffer) {
       uint8_t *flashPtr = (uint8_t *) 0x1A0A;
       buffer[0] = flashPtr[3]; // Wafer ID
       buffer[1] = flashPtr[2];
@@ -176,14 +170,13 @@ class GWAP
      * @param regId Register ID
      * @param val   Register value
      */
-    template<class T> void sendPacketVal(uint8_t funct, uint8_t regId, T val)
-    {
+    template<class T>
+    void sendPacketVal(uint8_t funct, uint8_t regId, T val) {
       int i;
       uint8_t buf[4];
 
-      for(i=sizeof(val) ; i>0 ; i--)
-      {
-        buf[i-1] = val & 0xFF;
+      for (i = sizeof(val); i > 0; i--) {
+        buf[i - 1] = val & 0xFF;
         val >>= 8;
       }
 

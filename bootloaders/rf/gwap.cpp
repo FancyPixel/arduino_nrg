@@ -30,14 +30,12 @@ void GWAP::sendPacket(uint8_t funct, uint8_t regId, uint8_t *val, uint8_t len) {
 
   packet.data[GWAP_DATA_HEAD_LEN + len] = tmpCrc;
 
-  flashMorseString("\nbef\n");
-
-  for (int i = 0; i < packet.length; i++) {
-    flashMorseString((int)packet.data[i]);
-    flashMorseString(",");
-  }
-
-  flashMorseString("\naft\n");
+//  for (int i = 0; i < packet.length; i++) {
+//    flashMorseString(packet.data[i]);
+//    flashMorseString(",");
+//  }
+//
+//  flashMorseString("\n\n");
 
   radio.sendData(packet);
 }
