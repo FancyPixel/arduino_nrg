@@ -1,27 +1,3 @@
-/**
- * Copyright (c) 2014 panStamp <contact@panstamp.com>
- *
- * This file is part of the panStamp project.
- *
- * panStamp  is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * any later version.
- *
- * panStamp is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with panStamp; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
- * USA
- *
- * Author: Daniel Berenguer
- * Creation date: 04/01/2014
- */
-
 #ifndef _RFLOADER_H
 #define _RFLOADER_H
 
@@ -32,7 +8,7 @@
 #include "memconfig.h"
 #include "timer1a0.h"
 #include "gwap.h"
-//#include "utils.h"
+#include "utils.h"
 
 /**
  * Uncomment only in case of using GDB bootloader
@@ -42,7 +18,8 @@
 /**
  * Default product code
  */
-uint8_t DEFAULT_PRODUCT_CODE[] = {0,0,0,1,0xFF,0,0,0};
+//uint8_t DEFAULT_PRODUCT_CODE[] = {0,0,0,1,0xFF,0,0,0};
+
 /**
  * GWAP status packets
  */
@@ -53,7 +30,7 @@ uint8_t DEFAULT_PRODUCT_CODE[] = {0,0,0,1,0xFF,0,0,0};
 // Query product code from node with address 1
 #define TRANSMIT_GWAP_QUERY_PCODE()           gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_PRODUCTCODE, 0, 0)
 // Query firmware line from node with address 1
-#define TRANSMIT_GWAP_QUERY_LINE(line)        gwap.sendPacketVal((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FIRMWARE, line)
+#define TRANSMIT_GWAP_QUERY_LINE(line)        gwap.sendPacketVal((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, line)
 // Type of record
 #define TYPE_OF_RECORD(line)                  line[2]
 

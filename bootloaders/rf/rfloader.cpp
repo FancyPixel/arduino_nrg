@@ -1,31 +1,8 @@
-/**
- * Copyright (c) 2014 panStamp <contact@panstamp.com>
- *
- * This file is part of the panStamp project.
- *
- * panStamp  is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * any later version.
- *
- * panStamp is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with panStamp; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
- * USA
- *
- * Author: Daniel Berenguer
- * Creation date: 04/01/2014
- */
 #include "rfloader.h"
 
 // Responses from server have to be received before 10000 ms after sending
 // the query
-#define RESPONSE_TIMEOUT 50
+#define RESPONSE_TIMEOUT 200
 // Maximum number of queries sent to the server for a given line of firmware
 #define MAX_REPEAT_QUERY 20
 
@@ -67,7 +44,7 @@ bool readHexLine(uint16_t lineNumber) {
         lineLength = packet.length - GWAP_DATA_HEAD_LEN - 1;
 
         // // Firmware page received?
-        if (packet.GWAP_REGID == REGI_FIRMWARE) {
+        if (packet.GWAP_REGID == REGI_FWVERSION) {
           // Correct data length?
           if (lineLength <= BYTES_PER_LINE) {
             // Correct line number?
@@ -91,13 +68,21 @@ bool readHexLine(uint16_t lineNumber) {
  * Main routine
  */
 int main(void) {
+  // Force Reset pin high
+  P2DIR |= BIT1;
+  P2OUT &= ~BIT1;
+  P2OUT |= BIT1;
+  // Force FACTORY reset pin high
+  P2DIR |= BIT7;
+  P2OUT &= ~BIT7;
+  P2OUT |= BIT7;
+
   uint8_t state, status, bytes, i, count = 0;
   // Current firmware line being queried from hex file
   uint16_t lineNumber = 0;
 
   CONFIG_LED();
   CONFIG_MORSE_OUT();
-
 
 //  flashMorseString("start\n");
 
@@ -114,11 +99,10 @@ int main(void) {
   // Disable interrupts
   __disable_interrupt();
 
-
-  // Serial.println("Before initCore");
   // Init core
   initCore();
 
+//  blink(5, 500);
 
   // Serial.println("Before jumpToUserCode");
   // Valid starting address of user code?
@@ -128,14 +112,8 @@ int main(void) {
       jumpToUserCode();
   }
 
-  // digitalWrite(LED, HIGH);
-  // delay(400);
-  // digitalWrite(LED, LOW);
-  // delay(400);
-
   CC430FLASH flash;
   TIMER1A0 timer;
-
 
   // Serial.println("Before gwap init");
   // Init GWAP comms
@@ -157,9 +135,11 @@ int main(void) {
   while (1) {
     // Wait for new line from server
     while (!lineReceived) {
+
       // Query firmware line
-//      flashMorseString("req\n");
       TRANSMIT_GWAP_QUERY_LINE(lineNumber);
+
+      blink(1, 100);
 
       // Repeat query a limited amount of times if necessary
       if (count++ == MAX_REPEAT_QUERY) {
@@ -182,7 +162,6 @@ int main(void) {
           LED_ON();
           // Packet received. Read packet and extract HEX line
           if (readHexLine(lineNumber)) {
-//            flashMorseString("rec\n");
             count = 0;  // Reset counter
             break;
           }
@@ -244,6 +223,7 @@ int main(void) {
         lineNumber++;
       } else  // Probably end of file
       {
+//        flashMorseString("fileend");
         // Erase the vector table segment
         flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
 
@@ -266,6 +246,8 @@ int main(void) {
           flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
 
         // Jump to user code
+//        flashMorseString("jump");
+
         jumpToUserCode();
       }
 //      flashMorseString("next\n\n\n");
@@ -439,9 +421,11 @@ void jumpToUserCode(void) {
   uint8_t state = (uint8_t) SYSTATE_RESTART;
   TRANSMIT_GWAP_STATUS_STATE(state);
 
-  void (*p)(void);                     // Declare a local function pointer
-  p = (void (*)(void)) USER_ROMADDR;    // Assign the pointer address
-  (*p)();                               // Call the function
+  P2OUT &= ~BIT1;
+
+//  void (*p)(void);                     // Declare a local function pointer
+//  p = (void (*)(void)) USER_ROMADDR;    // Assign the pointer address
+//  (*p)();                               // Call the function
 }
 
 /**

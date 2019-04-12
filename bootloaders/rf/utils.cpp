@@ -12,6 +12,7 @@ void delayClockCycles(register uint32_t n)
 void delay(int millis) {
   for (int i = 0; i < millis; i++) {
     delayClockCycles(200L);
+//    delayClockCycles(3500);
   }
 }
 
@@ -20,7 +21,7 @@ void blink(int times, int time = 500) {
     LED_ON();
     delay(time);
     LED_OFF();
-    if (i < times -1) {
+    if (i < times - 1) {
       delay(time);
     }
   }
