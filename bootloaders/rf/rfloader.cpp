@@ -68,14 +68,15 @@ bool readHexLine(uint16_t lineNumber) {
  * Main routine
  */
 int main(void) {
-  // Force Reset pin high
-  P2DIR |= BIT1;
-  P2OUT &= ~BIT1;
-  P2OUT |= BIT1;
+//  PMMCTL0 &= ~PMMSWPOR;
+  // Enable Reset pin
+//  P2DIR |= BIT1;
+//  P2OUT |= BIT1;
+//  P2OUT |= BIT1;
   // Force FACTORY reset pin high
-  P2DIR |= BIT7;
-  P2OUT &= ~BIT7;
-  P2OUT |= BIT7;
+//  P2DIR |= BIT7;
+//  P2OUT &= ~BIT7;
+//  P2OUT |= BIT7;
 
   uint8_t state, status, bytes, i, count = 0;
   // Current firmware line being queried from hex file
@@ -102,14 +103,13 @@ int main(void) {
   // Init core
   initCore();
 
-//  blink(5, 500);
-
-  // Serial.println("Before jumpToUserCode");
   // Valid starting address of user code?
   if (userCodeAddr != 0xFFFF) {
     // Jump to user code if the wireless bootloader was not called from there
-    if (runUserCode)
+    if (runUserCode) {
+//      flashMorseString("jump run user code\n");
       jumpToUserCode();
+    }
   }
 
   CC430FLASH flash;
@@ -139,15 +139,17 @@ int main(void) {
       // Query firmware line
       TRANSMIT_GWAP_QUERY_LINE(lineNumber);
 
-      blink(1, 100);
+      blink(1, 50);
 
       // Repeat query a limited amount of times if necessary
-      if (count++ == MAX_REPEAT_QUERY) {
-        // If the flash was not erased then start user code
-        if (firstLine)
-          jumpToUserCode();
-        // Otherwise continue forever asking
-      }
+//      if (count++ == MAX_REPEAT_QUERY) {
+      // If the flash was not erased then start user code
+//        if (firstLine) {
+//          flashMorseString("jump firstline\n");
+//          jumpToUserCode();
+//        }
+      // Otherwise continue forever asking
+//      }
 
       // Start timer
       timer.start(RESPONSE_TIMEOUT);
@@ -178,9 +180,6 @@ int main(void) {
         // Get target address
         uint16_t addrFromHexFile = getTargetAddress(ptrLine);
 
-//        flashMorseString(lineNumber);
-//        flashMorseString("\n");
-
         // Only for the first line received
         if (firstLine) {
           firstLine = false;
@@ -188,6 +187,7 @@ int main(void) {
           // Is the starting address from the hex file different than our user flash address?
           if (addrFromHexFile != address) {
             // Jump to user code
+//            flashMorseString("jump addr from hex\n");
             jumpToUserCode();
           } else  // Starting address is OK
           {
@@ -202,7 +202,6 @@ int main(void) {
           }
         }
 
-//        flashMorseString("fl s\n");
         // Save vector table in buffer
         if (addrFromHexFile >= VECTOR_TABLE_ADDR) {
           uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
@@ -219,11 +218,10 @@ int main(void) {
           flash.write((uint8_t *) addrFromHexFile, ptrLine + 3, lineLength - 4);
         }
 
-//        flashMorseString("fl e\n");
         lineNumber++;
       } else  // Probably end of file
       {
-//        flashMorseString("fileend");
+
         // Erase the vector table segment
         flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
 
@@ -242,16 +240,14 @@ int main(void) {
         isrTable[3][0x0D] = 0x90;
 
         // Write ISR table
-        for (i = 0; i < 8; i++)
+        for (i = 0; i < 8; i++) {
           flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
+        }
 
         // Jump to user code
-//        flashMorseString("jump");
-
+//        flashMorseString("jump last line\n");
         jumpToUserCode();
       }
-//      flashMorseString("next\n\n\n");
-
     }
   }
 
@@ -421,11 +417,9 @@ void jumpToUserCode(void) {
   uint8_t state = (uint8_t) SYSTATE_RESTART;
   TRANSMIT_GWAP_STATUS_STATE(state);
 
-  P2OUT &= ~BIT1;
-
-//  void (*p)(void);                     // Declare a local function pointer
-//  p = (void (*)(void)) USER_ROMADDR;    // Assign the pointer address
-//  (*p)();                               // Call the function
+  void (*p)(void);                     // Declare a local function pointer
+  p = (void (*)(void)) USER_ROMADDR;    // Assign the pointer address
+  (*p)();                               // Call the function
 }
 
 /**

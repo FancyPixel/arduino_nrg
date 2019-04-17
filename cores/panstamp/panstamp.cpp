@@ -356,8 +356,15 @@ bool PANSTAMP::sendData(CCPACKET packet)
  */
 void PANSTAMP::reset(void)
 {
-  WDTCTL = 0;
-  while (1) {}
+  // Generate a BOR
+  PMMCTL0_H = 0xA5;
+  PMMCTL0_L |= PMMSWBOR;
+  PMMCTL0_H = 0x00;
+
+  while(1);
+
+//  WDTCTL = 0;
+//  while (1) {}
 }
    
 /**
