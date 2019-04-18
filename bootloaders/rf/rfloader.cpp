@@ -417,9 +417,15 @@ void jumpToUserCode(void) {
   uint8_t state = (uint8_t) SYSTATE_RESTART;
   TRANSMIT_GWAP_STATUS_STATE(state);
 
-  void (*p)(void);                     // Declare a local function pointer
-  p = (void (*)(void)) USER_ROMADDR;    // Assign the pointer address
-  (*p)();                               // Call the function
+  PMMCTL0_H = 0xA5;
+  PMMCTL0_L |= PMMSWBOR;
+  PMMCTL0_H = 0x00;
+
+  while(1);
+
+//  void (*p)(void);                     // Declare a local function pointer
+//  p = (void (*)(void)) USER_ROMADDR;    // Assign the pointer address
+//  (*p)();                               // Call the function
 }
 
 /**
