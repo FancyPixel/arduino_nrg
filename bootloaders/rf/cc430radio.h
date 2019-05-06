@@ -54,7 +54,7 @@ enum RFSTATE
 #define CCDEF_FREQ0_433  0x62   // Frequency Control Word, Low Byte
 #define CCDEF_MDMCFG4    0xCA   // Modem configuration.
 #define CCDEF_MDMCFG3    0x83   // Modem configuration.
-#define CCDEF_MDMCFG2    0x93   // Modem configuration.
+#define CCDEF_MDMCFG2    0x92   // Modem configuration.
 #define CCDEF_MDMCFG1    0x22   // Modem configuration.
 #define CCDEF_MDMCFG0    0xF8   // Modem configuration.
 #define CCDEF_CHANNR     0x00   // Channel number.
