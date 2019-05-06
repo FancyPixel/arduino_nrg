@@ -95,7 +95,7 @@ enum RFSTATE
 #define CCDEF_MDMCFG4_4800    0xC7   // Modem configuration. Speed = 4800 bps
 #define CCDEF_MDMCFG4_38400    0xCA   // Modem configuration. Speed = 38 Kbps
 #define CCDEF_MDMCFG3    0x83   // Modem configuration.
-#define CCDEF_MDMCFG2    0x93   // Modem configuration.
+#define CCDEF_MDMCFG2    0x92   // Modem configuration.
 #define CCDEF_MDMCFG1    0x22   // Modem configuration.
 #define CCDEF_MDMCFG0    0xF8   // Modem configuration.
 #define CCDEF_CHANNR     0x00   // Channel number.
