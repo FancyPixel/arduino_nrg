@@ -133,10 +133,10 @@ int main(void) {
   while (1) {
     // Wait for new line from server
     while (!lineReceived) {
-      LED_OFF();
+      LED_ON();
       // Query firmware line
       TRANSMIT_GWAP_QUERY_LINE(lineNumber);
-      LED_ON();
+      LED_OFF();
       // Start timer
       timer.start(RESPONSE_TIMEOUT);
 
