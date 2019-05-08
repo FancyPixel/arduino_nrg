@@ -26,7 +26,8 @@ CC430RADIO::CC430RADIO(void)
   syncWord[0] = CCDEF_SYNC0;
   syncWord[1] = CCDEF_SYNC1;
   devAddress = CCDEF_ADDR;
-  paTableByte = PA_LowPower;            // Priority = Low power
+  paTableByte = PA_LongDistance;            // Priority = Long distance
+//  paTableByte = PA_LowPower;            // Priority = Low power
 }
 
 /**
@@ -58,7 +59,12 @@ void CC430RADIO::setCCregs(void)
   // Set default carrier frequency = 868 MHz
   setCarrierFreq(carrierFreq);
 
-  WriteSingleReg(MDMCFG4,  CCDEF_MDMCFG4);
+  // RF speed
+  if (workMode == MODE_4800)
+    WriteSingleReg(MDMCFG4,  CCDEF_MDMCFG4_4800);
+  else
+    WriteSingleReg(MDMCFG4,  CCDEF_MDMCFG4_38400);
+
   WriteSingleReg(MDMCFG3,  CCDEF_MDMCFG3);
   WriteSingleReg(MDMCFG2,  CCDEF_MDMCFG2);
   WriteSingleReg(MDMCFG1,  CCDEF_MDMCFG1);

@@ -11,19 +11,17 @@ void delayClockCycles(register uint32_t n)
 
 void delay(int millis) {
   for (int i = 0; i < millis; i++) {
-    delayClockCycles(200L);
-//    delayClockCycles(3500);
+    delayClockCycles(4000L);
+//    delayClockCycles(200L);
   }
 }
 
-void blink(int times, int time = 500) {
+void blink(int times, int delay_time = 500) {
   for (int i = 0; i < times; i++) {
     LED_ON();
-    delay(time);
+    delay(delay_time);
     LED_OFF();
-    if (i < times - 1) {
-      delay(time);
-    }
+    delay(delay_time);
   }
 }
 
@@ -213,7 +211,6 @@ void startCommunication() {
   delay(DOT_DURATION);
   pullHigh();
   delay(DOT_DURATION);
-
 }
 
 void endCommunication() {

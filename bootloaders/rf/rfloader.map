@@ -48,6 +48,12 @@ Discarded input sections
  .text          0x0000000000000000        0x0 utils.o
  .data          0x0000000000000000        0x0 utils.o
  .bss           0x0000000000000000        0x0 utils.o
+ .text._Z16delayClockCyclesm
+                0x0000000000000000        0x6 utils.o
+ .text._Z5delayi
+                0x0000000000000000       0x1c utils.o
+ .text._Z5blinkii
+                0x0000000000000000       0x2c utils.o
  .text._Z9stringLenPc
                 0x0000000000000000       0x14 utils.o
  .rodata._Z10char2morsec
@@ -850,7 +856,7 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
 .rela.plt
  *(.rela.plt)
 
-.text           0x0000000000008000      0xc56
+.text           0x0000000000008000      0xc12
                 0x0000000000008000                . = ALIGN (0x2)
  *(.init .init.*)
  *(.init0)
@@ -877,11 +883,11 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
  *(.init7)
  *(.init8)
  *(.init9)
- .init9         0x000000000000803a      0x366 rfloader.o
+ .init9         0x000000000000803a      0x36c rfloader.o
                 0x000000000000803a                main
  *(.fini9)
- .fini9         0x00000000000083a0        0x0 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__stop_progExec__-dwdt.o)
-                0x00000000000083a0                __stop_progExec__
+ .fini9         0x00000000000083a6        0x0 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__stop_progExec__-dwdt.o)
+                0x00000000000083a6                __stop_progExec__
  *(.fini8)
  *(.fini7)
  *(.fini6)
@@ -891,130 +897,121 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
  *(.fini2)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000000000083a0        0x6 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
-                0x00000000000083a0                _endless_loop__
+ .fini0         0x00000000000083a6        0x6 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
+                0x00000000000083a6                _endless_loop__
  *(.fini .fini.*)
-                0x00000000000083a6                . = ALIGN (0x2)
-                0x00000000000083a6                __ctors_start = .
+                0x00000000000083ac                . = ALIGN (0x2)
+                0x00000000000083ac                __ctors_start = .
  *(.ctors)
- .ctors         0x00000000000083a6        0x2 rfloader.o
-                0x00000000000083a8                __ctors_end = .
-                0x00000000000083a8                __dtors_start = .
+ .ctors         0x00000000000083ac        0x2 rfloader.o
+                0x00000000000083ae                __ctors_end = .
+                0x00000000000083ae                __dtors_start = .
  *(.dtors)
-                0x00000000000083a8                __dtors_end = .
-                0x00000000000083a8                . = ALIGN (0x2)
+                0x00000000000083ae                __dtors_end = .
+                0x00000000000083ae                . = ALIGN (0x2)
  *(.text .text.* .gnu.linkonce.t.*)
- .text          0x00000000000083a8        0x4 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/crt0ivtbl64.o
-                0x00000000000083a8                __isr_40
-                0x00000000000083a8                __isr_47
-                0x00000000000083a8                __isr_51
-                0x00000000000083a8                __isr_57
-                0x00000000000083a8                __isr_33
-                0x00000000000083a8                __isr_32
-                0x00000000000083a8                __isr_54
-                0x00000000000083a8                __isr_42
-                0x00000000000083a8                __isr_49
-                0x00000000000083a8                __isr_59
-                0x00000000000083a8                __isr_39
-                0x00000000000083a8                __isr_46
-                0x00000000000083a8                __isr_53
-                0x00000000000083a8                __isr_41
-                0x00000000000083a8                __isr_60
-                0x00000000000083a8                __isr_36
-                0x00000000000083a8                __isr_34
-                0x00000000000083a8                __isr_44
-                0x00000000000083a8                __isr_61
-                0x00000000000083a8                __isr_48
-                0x00000000000083a8                __isr_55
-                0x00000000000083a8                __isr_43
-                0x00000000000083a8                __isr_50
-                0x00000000000083a8                __isr_56
-                0x00000000000083a8                __isr_38
-                0x00000000000083a8                __isr_35
-                0x00000000000083a8                __isr_45
-                0x00000000000083a8                __isr_58
-                0x00000000000083a8                __isr_62
-                0x00000000000083a8                __isr_52
-                0x00000000000083a8                __isr_37
+ .text          0x00000000000083ae        0x4 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/crt0ivtbl64.o
+                0x00000000000083ae                __isr_40
+                0x00000000000083ae                __isr_47
+                0x00000000000083ae                __isr_51
+                0x00000000000083ae                __isr_57
+                0x00000000000083ae                __isr_33
+                0x00000000000083ae                __isr_32
+                0x00000000000083ae                __isr_54
+                0x00000000000083ae                __isr_42
+                0x00000000000083ae                __isr_49
+                0x00000000000083ae                __isr_59
+                0x00000000000083ae                __isr_39
+                0x00000000000083ae                __isr_46
+                0x00000000000083ae                __isr_53
+                0x00000000000083ae                __isr_41
+                0x00000000000083ae                __isr_60
+                0x00000000000083ae                __isr_36
+                0x00000000000083ae                __isr_34
+                0x00000000000083ae                __isr_44
+                0x00000000000083ae                __isr_61
+                0x00000000000083ae                __isr_48
+                0x00000000000083ae                __isr_55
+                0x00000000000083ae                __isr_43
+                0x00000000000083ae                __isr_50
+                0x00000000000083ae                __isr_56
+                0x00000000000083ae                __isr_38
+                0x00000000000083ae                __isr_35
+                0x00000000000083ae                __isr_45
+                0x00000000000083ae                __isr_58
+                0x00000000000083ae                __isr_62
+                0x00000000000083ae                __isr_52
+                0x00000000000083ae                __isr_37
  .text._ZN10CC430FLASH12eraseSegmentEPh.isra.1
-                0x00000000000083ac       0x24 rfloader.o
+                0x00000000000083b2       0x24 rfloader.o
  .text._ZN10CC430FLASH5writeEPhS0_h.isra.2
-                0x00000000000083d0       0x50 rfloader.o
+                0x00000000000083d6       0x50 rfloader.o
  .text._Z11readHexLinej
-                0x0000000000008420       0x6c rfloader.o
-                0x0000000000008420                _Z11readHexLinej
+                0x0000000000008426       0x6c rfloader.o
+                0x0000000000008426                _Z11readHexLinej
  .text._ZN4GWAP13sendPacketValIhEEvhhT_
-                0x000000000000848c       0x16 rfloader.o
-                0x000000000000848c                _ZN4GWAP13sendPacketValIhEEvhhT_
+                0x0000000000008492       0x16 rfloader.o
+                0x0000000000008492                _ZN4GWAP13sendPacketValIhEEvhhT_
  .text.startup._GLOBAL__sub_I_gwap
-                0x00000000000084a2        0xa rfloader.o
+                0x00000000000084a8        0xa rfloader.o
  .text._ZN10CC430RADIOC2Ev
-                0x00000000000084ac       0x20 cc430radio.o
-                0x00000000000084ac                _ZN10CC430RADIOC2Ev
-                0x00000000000084ac                _ZN10CC430RADIOC1Ev
+                0x00000000000084b2       0x20 cc430radio.o
+                0x00000000000084b2                _ZN10CC430RADIOC2Ev
+                0x00000000000084b2                _ZN10CC430RADIOC1Ev
  .text._ZN10CC430RADIO9setCCregsEv
-                0x00000000000084cc      0x210 cc430radio.o
-                0x00000000000084cc                _ZN10CC430RADIO9setCCregsEv
+                0x00000000000084d2      0x21c cc430radio.o
+                0x00000000000084d2                _ZN10CC430RADIO9setCCregsEv
  .text._ZN10CC430RADIO8sendDataE8CCPACKET
-                0x00000000000086dc       0x8c cc430radio.o
-                0x00000000000086dc                _ZN10CC430RADIO8sendDataE8CCPACKET
+                0x00000000000086ee       0x8c cc430radio.o
+                0x00000000000086ee                _ZN10CC430RADIO8sendDataE8CCPACKET
  .text._ZN10CC430RADIO11receiveDataEP8CCPACKET
-                0x0000000000008768       0x9e cc430radio.o
-                0x0000000000008768                _ZN10CC430RADIO11receiveDataEP8CCPACKET
+                0x000000000000877a       0x9e cc430radio.o
+                0x000000000000877a                _ZN10CC430RADIO11receiveDataEP8CCPACKET
  .text._Z13ReadSingleRegh
-                0x0000000000008806       0x16 rf1a.o
-                0x0000000000008806                _Z13ReadSingleRegh
+                0x0000000000008818       0x16 rf1a.o
+                0x0000000000008818                _Z13ReadSingleRegh
  .text._Z14WriteSingleReghh
-                0x000000000000881c       0x38 rf1a.o
-                0x000000000000881c                _Z14WriteSingleReghh
+                0x000000000000882e       0x38 rf1a.o
+                0x000000000000882e                _Z14WriteSingleReghh
  .text._Z6Strobeh
-                0x0000000000008854       0x94 rf1a.o
-                0x0000000000008854                _Z6Strobeh
+                0x0000000000008866       0x94 rf1a.o
+                0x0000000000008866                _Z6Strobeh
  .text._Z12ReadBurstReghPhh
-                0x00000000000088e8       0x4c rf1a.o
-                0x00000000000088e8                _Z12ReadBurstReghPhh
+                0x00000000000088fa       0x4c rf1a.o
+                0x00000000000088fa                _Z12ReadBurstReghPhh
  .text._Z13WriteBurstReghPhh
-                0x0000000000008934       0x44 rf1a.o
-                0x0000000000008934                _Z13WriteBurstReghPhh
+                0x0000000000008946       0x44 rf1a.o
+                0x0000000000008946                _Z13WriteBurstReghPhh
  .text._Z12WritePATableh
-                0x0000000000008978       0x6a rf1a.o
-                0x0000000000008978                _Z12WritePATableh
+                0x000000000000898a       0x6a rf1a.o
+                0x000000000000898a                _Z12WritePATableh
  .text._Z10SetVCoreUph
-                0x00000000000089e2       0x46 pmm.o
-                0x00000000000089e2                _Z10SetVCoreUph
+                0x00000000000089f4       0x46 pmm.o
+                0x00000000000089f4                _Z10SetVCoreUph
  .text._Z12SetVCoreDownh
-                0x0000000000008a28       0x28 pmm.o
-                0x0000000000008a28                _Z12SetVCoreDownh
+                0x0000000000008a3a       0x28 pmm.o
+                0x0000000000008a3a                _Z12SetVCoreDownh
  .text._Z8SetVCoreh
-                0x0000000000008a50       0x2c pmm.o
-                0x0000000000008a50                _Z8SetVCoreh
+                0x0000000000008a62       0x2c pmm.o
+                0x0000000000008a62                _Z8SetVCoreh
  .text._ZN4GWAP10sendPacketEhhPhh
-                0x0000000000008a7c       0x9e gwap.o
-                0x0000000000008a7c                _ZN4GWAP10sendPacketEhhPhh
- .text._Z16delayClockCyclesm
-                0x0000000000008b1a        0x6 utils.o
-                0x0000000000008b1a                _Z16delayClockCyclesm
- .text._Z5delayi
-                0x0000000000008b20       0x1c utils.o
-                0x0000000000008b20                _Z5delayi
- .text._Z5blinkii
-                0x0000000000008b3c       0x34 utils.o
-                0x0000000000008b3c                _Z5blinkii
- .text          0x0000000000008b70       0xe4 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
-                0x0000000000008b70                memcpy
- .text.crt0     0x0000000000008c54        0x2 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
-                0x0000000000008c54                _unexpected_
-                0x0000000000008c56                . = ALIGN (0x2)
+                0x0000000000008a8e       0x9e gwap.o
+                0x0000000000008a8e                _ZN4GWAP10sendPacketEhhPhh
+ .text          0x0000000000008b2c       0xe4 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+                0x0000000000008b2c                memcpy
+ .text.crt0     0x0000000000008c10        0x2 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
+                0x0000000000008c10                _unexpected_
+                0x0000000000008c12                . = ALIGN (0x2)
 
-.rodata         0x0000000000008c56        0x4
-                0x0000000000008c56                . = ALIGN (0x2)
+.rodata         0x0000000000008c12        0x4
+                0x0000000000008c12                . = ALIGN (0x2)
  *(.rodata .rodata.* .gnu.linkonce.r.*)
  .rodata._ZL17GWAP_PRODUCT_CODE
-                0x0000000000008c56        0x4 rfloader.o
-                0x0000000000008c5a                . = ALIGN (0x2)
-                0x0000000000008c5a                _etext = .
+                0x0000000000008c12        0x4 rfloader.o
+                0x0000000000008c16                . = ALIGN (0x2)
+                0x0000000000008c16                _etext = .
 
-.data           0x0000000000001c00        0x2 load address 0x0000000000008c5a
+.data           0x0000000000001c00        0x2 load address 0x0000000000008c16
                 0x0000000000001c00                . = ALIGN (0x2)
                 0x0000000000001c00                PROVIDE (__data_start, .)
  *(.data .data.* .gnu.linkonce.d.*)
@@ -1024,10 +1021,10 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
                 0x0000000000001c02                . = ALIGN (0x2)
  *fill*         0x0000000000001c01        0x1 00
                 0x0000000000001c02                _edata = .
-                0x0000000000008c5a                PROVIDE (__data_load_start, LOADADDR (.data))
+                0x0000000000008c16                PROVIDE (__data_load_start, LOADADDR (.data))
                 0x0000000000000002                PROVIDE (__data_size, SIZEOF (.data))
 
-.bss            0x0000000000001c02       0xdc load address 0x0000000000008c5c
+.bss            0x0000000000001c02       0xde load address 0x0000000000008c18
                 0x0000000000001c02                PROVIDE (__bss_start, .)
  *(.bss .bss.*)
  .bss.isrTable  0x0000000000001c02       0x80 rfloader.o
@@ -1045,23 +1042,23 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
  .bss.userCodeAddr
                 0x0000000000001cc8        0x2 rfloader.o
                 0x0000000000001cc8                userCodeAddr
- .bss.gwap      0x0000000000001cca       0x12 rfloader.o
+ .bss.gwap      0x0000000000001cca       0x14 rfloader.o
                 0x0000000000001cca                gwap
  .bss._ZZN4GWAP10sendPacketEhhPhhE5nonce
-                0x0000000000001cdc        0x1 gwap.o
+                0x0000000000001cde        0x1 gwap.o
  *(COMMON)
-                0x0000000000001cde                . = ALIGN (0x2)
- *fill*         0x0000000000001cdd        0x1 00
-                0x0000000000001cde                PROVIDE (__bss_end, .)
-                0x00000000000000dc                PROVIDE (__bss_size, SIZEOF (.bss))
+                0x0000000000001ce0                . = ALIGN (0x2)
+ *fill*         0x0000000000001cdf        0x1 00
+                0x0000000000001ce0                PROVIDE (__bss_end, .)
+                0x00000000000000de                PROVIDE (__bss_size, SIZEOF (.bss))
 
-.noinit         0x0000000000001cde        0x0 load address 0x0000000000008c5c
-                0x0000000000001cde                PROVIDE (__noinit_start, .)
+.noinit         0x0000000000001ce0        0x0 load address 0x0000000000008c18
+                0x0000000000001ce0                PROVIDE (__noinit_start, .)
  *(.noinit .noinit.*)
-                0x0000000000001cde                . = ALIGN (0x2)
-                0x0000000000001cde                PROVIDE (__noinit_end, .)
-                0x0000000000001cde                . = ALIGN (0x2)
-                0x0000000000001cde                _end = .
+                0x0000000000001ce0                . = ALIGN (0x2)
+                0x0000000000001ce0                PROVIDE (__noinit_end, .)
+                0x0000000000001ce0                . = ALIGN (0x2)
+                0x0000000000001ce0                _end = .
 
 .infomem        0x0000000000001800        0x0
  *(.infomem)
@@ -1169,109 +1166,109 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x0000000000000000     0x2c0c
+.debug_info     0x0000000000000000     0x2c83
  *(.debug_info)
- .debug_info    0x0000000000000000     0x11f5 rfloader.o
- .debug_info    0x00000000000011f5      0x641 cc430radio.o
- .debug_info    0x0000000000001836      0x35d rf1a.o
- .debug_info    0x0000000000001b93      0x121 pmm.o
- .debug_info    0x0000000000001cb4      0x679 gwap.o
- .debug_info    0x000000000000232d      0x4c5 utils.o
- .debug_info    0x00000000000027f2      0x111 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
- .debug_info    0x0000000000002903       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__watchdog_support-dwdt.o)
- .debug_info    0x0000000000002972       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__init_stack-dwdt.o)
- .debug_info    0x00000000000029e1       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_copy_data-dwdt.o)
- .debug_info    0x0000000000002a50       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_clear_bss-dwdt.o)
- .debug_info    0x0000000000002abf       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
- .debug_info    0x0000000000002b2e       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
- .debug_info    0x0000000000002b9d       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_ctors430-dwdt.o)
+ .debug_info    0x0000000000000000     0x123c rfloader.o
+ .debug_info    0x000000000000123c      0x657 cc430radio.o
+ .debug_info    0x0000000000001893      0x35d rf1a.o
+ .debug_info    0x0000000000001bf0      0x121 pmm.o
+ .debug_info    0x0000000000001d11      0x693 gwap.o
+ .debug_info    0x00000000000023a4      0x4c5 utils.o
+ .debug_info    0x0000000000002869      0x111 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_info    0x000000000000297a       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__watchdog_support-dwdt.o)
+ .debug_info    0x00000000000029e9       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__init_stack-dwdt.o)
+ .debug_info    0x0000000000002a58       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_copy_data-dwdt.o)
+ .debug_info    0x0000000000002ac7       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_clear_bss-dwdt.o)
+ .debug_info    0x0000000000002b36       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
+ .debug_info    0x0000000000002ba5       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
+ .debug_info    0x0000000000002c14       0x6f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_ctors430-dwdt.o)
  *(.gnu.linkonce.wi.*)
 
-.debug_abbrev   0x0000000000000000      0xd2c
+.debug_abbrev   0x0000000000000000      0xd58
  *(.debug_abbrev)
- .debug_abbrev  0x0000000000000000      0x433 rfloader.o
- .debug_abbrev  0x0000000000000433      0x252 cc430radio.o
- .debug_abbrev  0x0000000000000685      0x164 rf1a.o
- .debug_abbrev  0x00000000000007e9       0xa4 pmm.o
- .debug_abbrev  0x000000000000088d      0x1e4 gwap.o
- .debug_abbrev  0x0000000000000a71      0x189 utils.o
- .debug_abbrev  0x0000000000000bfa       0xa6 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
- .debug_abbrev  0x0000000000000ca0       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__watchdog_support-dwdt.o)
- .debug_abbrev  0x0000000000000cb4       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__init_stack-dwdt.o)
- .debug_abbrev  0x0000000000000cc8       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_copy_data-dwdt.o)
- .debug_abbrev  0x0000000000000cdc       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_clear_bss-dwdt.o)
- .debug_abbrev  0x0000000000000cf0       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
- .debug_abbrev  0x0000000000000d04       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
- .debug_abbrev  0x0000000000000d18       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_ctors430-dwdt.o)
+ .debug_abbrev  0x0000000000000000      0x43d rfloader.o
+ .debug_abbrev  0x000000000000043d      0x263 cc430radio.o
+ .debug_abbrev  0x00000000000006a0      0x164 rf1a.o
+ .debug_abbrev  0x0000000000000804       0xa4 pmm.o
+ .debug_abbrev  0x00000000000008a8      0x1f5 gwap.o
+ .debug_abbrev  0x0000000000000a9d      0x189 utils.o
+ .debug_abbrev  0x0000000000000c26       0xa6 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_abbrev  0x0000000000000ccc       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__watchdog_support-dwdt.o)
+ .debug_abbrev  0x0000000000000ce0       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__init_stack-dwdt.o)
+ .debug_abbrev  0x0000000000000cf4       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_copy_data-dwdt.o)
+ .debug_abbrev  0x0000000000000d08       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_clear_bss-dwdt.o)
+ .debug_abbrev  0x0000000000000d1c       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
+ .debug_abbrev  0x0000000000000d30       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
+ .debug_abbrev  0x0000000000000d44       0x14 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_ctors430-dwdt.o)
 
-.debug_line     0x0000000000000000     0x11b7
+.debug_line     0x0000000000000000     0x11cb
  *(.debug_line)
- .debug_line    0x0000000000000000      0x4b1 rfloader.o
- .debug_line    0x00000000000004b1      0x211 cc430radio.o
- .debug_line    0x00000000000006c2      0x1ef rf1a.o
- .debug_line    0x00000000000008b1      0x138 pmm.o
- .debug_line    0x00000000000009e9      0x1ba gwap.o
- .debug_line    0x0000000000000ba3      0x2b2 utils.o
- .debug_line    0x0000000000000e55      0x107 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
- .debug_line    0x0000000000000f5c       0x54 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__watchdog_support-dwdt.o)
- .debug_line    0x0000000000000fb0       0x54 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__init_stack-dwdt.o)
- .debug_line    0x0000000000001004       0x59 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_copy_data-dwdt.o)
- .debug_line    0x000000000000105d       0x59 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_clear_bss-dwdt.o)
- .debug_line    0x00000000000010b6       0x55 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
- .debug_line    0x000000000000110b       0x54 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
- .debug_line    0x000000000000115f       0x58 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_ctors430-dwdt.o)
+ .debug_line    0x0000000000000000      0x4b2 rfloader.o
+ .debug_line    0x00000000000004b2      0x213 cc430radio.o
+ .debug_line    0x00000000000006c5      0x1ef rf1a.o
+ .debug_line    0x00000000000008b4      0x138 pmm.o
+ .debug_line    0x00000000000009ec      0x1ba gwap.o
+ .debug_line    0x0000000000000ba6      0x2c3 utils.o
+ .debug_line    0x0000000000000e69      0x107 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_line    0x0000000000000f70       0x54 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__watchdog_support-dwdt.o)
+ .debug_line    0x0000000000000fc4       0x54 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(__init_stack-dwdt.o)
+ .debug_line    0x0000000000001018       0x59 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_copy_data-dwdt.o)
+ .debug_line    0x0000000000001071       0x59 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_clear_bss-dwdt.o)
+ .debug_line    0x00000000000010ca       0x55 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_endless_loop__-dwdt.o)
+ .debug_line    0x000000000000111f       0x54 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_unexpected_-dwdt.o)
+ .debug_line    0x0000000000001173       0x58 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/mcpu-430x/mmpy-16/libcrt0dwdt.a(_ctors430-dwdt.o)
 
-.debug_frame    0x0000000000000000      0x314
+.debug_frame    0x0000000000000000      0x312
  *(.debug_frame)
  .debug_frame   0x0000000000000000       0x96 rfloader.o
  .debug_frame   0x0000000000000096       0x5a cc430radio.o
  .debug_frame   0x00000000000000f0       0x8a rf1a.o
  .debug_frame   0x000000000000017a       0x3e pmm.o
  .debug_frame   0x00000000000001b8       0x3a gwap.o
- .debug_frame   0x00000000000001f2       0xf6 utils.o
- .debug_frame   0x00000000000002e8       0x2c /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_frame   0x00000000000001f2       0xf4 utils.o
+ .debug_frame   0x00000000000002e6       0x2c /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
 
-.debug_str      0x0000000000000000      0xfea
+.debug_str      0x0000000000000000     0x1000
  *(.debug_str)
- .debug_str     0x0000000000000000      0xb3b rfloader.o
-                                        0xc54 (size before relaxing)
- .debug_str     0x0000000000000b3b       0x3c cc430radio.o
-                                        0x44d (size before relaxing)
- .debug_str     0x0000000000000b77      0x19c rf1a.o
+ .debug_str     0x0000000000000000      0xb4b rfloader.o
+                                        0xc64 (size before relaxing)
+ .debug_str     0x0000000000000b4b       0x3c cc430radio.o
+                                        0x457 (size before relaxing)
+ .debug_str     0x0000000000000b87      0x19c rf1a.o
                                         0x2bd (size before relaxing)
- .debug_str     0x0000000000000d13       0x70 pmm.o
+ .debug_str     0x0000000000000d23       0x70 pmm.o
                                         0x16e (size before relaxing)
- .debug_str     0x0000000000000d83       0x1e gwap.o
-                                        0x666 (size before relaxing)
- .debug_str     0x0000000000000da1      0x1b0 utils.o
-                                        0x482 (size before relaxing)
- .debug_str     0x0000000000000f51       0x99 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_str     0x0000000000000d93       0x1e gwap.o
+                                        0x671 (size before relaxing)
+ .debug_str     0x0000000000000db1      0x1b6 utils.o
+                                        0x488 (size before relaxing)
+ .debug_str     0x0000000000000f67       0x99 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
                                         0x11f (size before relaxing)
 
-.debug_loc      0x0000000000000000      0xab9
+.debug_loc      0x0000000000000000      0xac6
  *(.debug_loc)
- .debug_loc     0x0000000000000000      0x34f rfloader.o
- .debug_loc     0x000000000000034f      0x12d cc430radio.o
- .debug_loc     0x000000000000047c      0x16c rf1a.o
- .debug_loc     0x00000000000005e8       0x26 pmm.o
- .debug_loc     0x000000000000060e       0xcb gwap.o
- .debug_loc     0x00000000000006d9      0x229 utils.o
- .debug_loc     0x0000000000000902      0x1b7 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_loc     0x0000000000000000      0x35c rfloader.o
+ .debug_loc     0x000000000000035c      0x12d cc430radio.o
+ .debug_loc     0x0000000000000489      0x16c rf1a.o
+ .debug_loc     0x00000000000005f5       0x26 pmm.o
+ .debug_loc     0x000000000000061b       0xcb gwap.o
+ .debug_loc     0x00000000000006e6      0x229 utils.o
+ .debug_loc     0x000000000000090f      0x1b7 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
 
-.debug_macinfo  0x0000000000000000    0x6253b
+.debug_macinfo  0x0000000000000000    0x626cb
  *(.debug_macinfo)
  .debug_macinfo
-                0x0000000000000000    0x11bd7 rfloader.o
+                0x0000000000000000    0x11c5f rfloader.o
  .debug_macinfo
-                0x0000000000011bd7    0x1053e cc430radio.o
+                0x0000000000011c5f    0x105c3 cc430radio.o
  .debug_macinfo
-                0x0000000000022115     0xfe8a rf1a.o
+                0x0000000000022222     0xfe8a rf1a.o
  .debug_macinfo
-                0x0000000000031f9f     0xfde7 pmm.o
+                0x00000000000320ac     0xfde7 pmm.o
  .debug_macinfo
-                0x0000000000041d86    0x107c3 gwap.o
+                0x0000000000041e93    0x10847 gwap.o
  .debug_macinfo
-                0x0000000000052549     0xfff2 utils.o
+                0x00000000000526da     0xfff1 utils.o
 
 .debug_pubtypes
  *(.debug_pubtypes)
@@ -1285,6 +1282,6 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
  .debug_ranges  0x000000000000006c        0x8 gwap.o
  .debug_ranges  0x0000000000000074       0x44 utils.o
                 0x0000000000002bfe                PROVIDE (__stack, (ORIGIN (ram) + 0xffe))
-                0x0000000000008c5a                PROVIDE (__data_start_rom, _etext)
-                0x0000000000008c5c                PROVIDE (__data_end_rom, (_etext + SIZEOF (.data)))
+                0x0000000000008c16                PROVIDE (__data_start_rom, _etext)
+                0x0000000000008c18                PROVIDE (__data_end_rom, (_etext + SIZEOF (.data)))
 OUTPUT(rfloader.elf elf32-msp430)

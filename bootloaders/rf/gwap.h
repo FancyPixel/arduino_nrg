@@ -73,7 +73,7 @@ public:
     uint8_t devAddress[12];
 
     ALWAYS_INLINE
-    void init(uint8_t freq = CFREQ_868) {
+    void init(uint8_t freq = CFREQ_868, uint8_t mode = MODE_38400) {
       uint8_t buf[2];
       CC430FLASH flash;
       uint8_t i, tmp[8];
@@ -102,7 +102,7 @@ public:
 //      }
 
       // Init radio module
-      radio.init(freq);
+      radio.init(freq, mode);
     }
 
     /**

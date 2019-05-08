@@ -28,6 +28,13 @@ enum RFSTATE
   RFSTATE_PWRDWN
 };
 
+
+/**
+ * Working modes
+ */
+#define MODE_38400 0  // RF speed = 38400 bps
+#define MODE_4800  0x01  // RF speed = 4800 bps (default is 38 Kbps)
+
 /**
  * Frequency channels
  */
@@ -48,13 +55,18 @@ enum RFSTATE
 #define CCDEF_FREQ2_915  0x22   // Frequency Control Word, High Byte
 #define CCDEF_FREQ1_915  0xB1   // Frequency Control Word, Middle Byte
 #define CCDEF_FREQ0_915  0x3B   // Frequency Control Word, Low Byte
+// Carrier frequency = 918 MHz
+#define CCDEF_FREQ2_918  0x23   // Frequency Control Word, High Byte
+#define CCDEF_FREQ1_918  0x4E   // Frequency Control Word, Middle Byte
+#define CCDEF_FREQ0_918  0xC4   // Frequency Control Word, Low Byte
 // Carrier frequency = 433 MHz
 #define CCDEF_FREQ2_433  0x10   // Frequency Control Word, High Byte
 #define CCDEF_FREQ1_433  0xA7   // Frequency Control Word, Middle Byte
 #define CCDEF_FREQ0_433  0x62   // Frequency Control Word, Low Byte
-#define CCDEF_MDMCFG4    0xCA   // Modem configuration.
+#define CCDEF_MDMCFG4_4800    0xC7   // Modem configuration. Speed = 4800 bps
+#define CCDEF_MDMCFG4_38400    0xCA   // Modem configuration. Speed = 38 Kbps
 #define CCDEF_MDMCFG3    0x83   // Modem configuration.
-#define CCDEF_MDMCFG2    0x92   // Modem configuration.
+#define aCCDEF_MDMCFG2    0x92   // Modem configuration.
 #define CCDEF_MDMCFG1    0x22   // Modem configuration.
 #define CCDEF_MDMCFG0    0xF8   // Modem configuration.
 #define CCDEF_CHANNR     0x00   // Channel number.
@@ -128,7 +140,12 @@ class CC430RADIO
      */
     void setCCregs(void);
 
-  public:
+    /**
+     * Working mode (38400 or 4800)
+    */
+    uint8_t workMode;
+
+public:
     /**
      * Tx Power byte (single PATABLE config)
      */
@@ -161,6 +178,7 @@ class CC430RADIO
      */
     CC430RADIO(void);
 
+
     /**
      * reset
      * 
@@ -187,10 +205,11 @@ class CC430RADIO
      * @param addr Device address
      */
     ALWAYS_INLINE
-    void init(uint8_t freq=CFREQ_868)
+    void init(uint8_t freq=CFREQ_868, uint8_t mode = MODE_38400)
     {
       carrierFreq = freq;
-  
+      workMode = mode;
+
       // Reset radio interface
       reset();
 

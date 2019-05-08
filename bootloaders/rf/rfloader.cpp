@@ -1,10 +1,11 @@
 #include "rfloader.h"
 
-// Responses from server have to be received before 10000 ms after sending
+//#define WORKING_MODE MODE_4800
+#define WORKING_MODE MODE_38400
+
+// Responses from server have to be received before 300 ms after sending
 // the query
 #define RESPONSE_TIMEOUT 200
-// Maximum number of queries sent to the server for a given line of firmware
-#define MAX_REPEAT_QUERY 20
 
 // User code address
 uint16_t userCodeAddr;
@@ -68,24 +69,12 @@ bool readHexLine(uint16_t lineNumber) {
  * Main routine
  */
 int main(void) {
-//  PMMCTL0 &= ~PMMSWPOR;
-  // Enable Reset pin
-//  P2DIR |= BIT1;
-//  P2OUT |= BIT1;
-//  P2OUT |= BIT1;
-  // Force FACTORY reset pin high
-//  P2DIR |= BIT7;
-//  P2OUT &= ~BIT7;
-//  P2OUT |= BIT7;
-
   uint8_t state, status, bytes, i, count = 0;
   // Current firmware line being queried from hex file
   uint16_t lineNumber = 0;
 
   CONFIG_LED();
   CONFIG_MORSE_OUT();
-
-//  flashMorseString("start\n");
 
   // This flag will tell us whether wireless bootloading needs to start or not
   bool *ptr1;
@@ -103,6 +92,16 @@ int main(void) {
   // Init core
   initCore();
 
+  // Required to settle the delay
+//  pullLow();
+//  delay(200);
+//  pullHigh();
+  // END
+
+//  startCommunication();
+//  startCommunication();
+//  flashMorseString("start\n");
+
   // Valid starting address of user code?
   if (userCodeAddr != 0xFFFF) {
     // Jump to user code if the wireless bootloader was not called from there
@@ -115,9 +114,8 @@ int main(void) {
   CC430FLASH flash;
   TIMER1A0 timer;
 
-  // Serial.println("Before gwap init");
   // Init GWAP comms
-  gwap.init();
+  gwap.init(CFREQ_868, WORKING_MODE);
 
   // Serial.println("After gwap init");
   // Transmit default product code only if no user application is still flashed
@@ -135,22 +133,10 @@ int main(void) {
   while (1) {
     // Wait for new line from server
     while (!lineReceived) {
-
+      LED_OFF();
       // Query firmware line
       TRANSMIT_GWAP_QUERY_LINE(lineNumber);
-
-      blink(1, 50);
-
-      // Repeat query a limited amount of times if necessary
-//      if (count++ == MAX_REPEAT_QUERY) {
-      // If the flash was not erased then start user code
-//        if (firstLine) {
-//          flashMorseString("jump firstline\n");
-//          jumpToUserCode();
-//        }
-      // Otherwise continue forever asking
-//      }
-
+      LED_ON();
       // Start timer
       timer.start(RESPONSE_TIMEOUT);
 

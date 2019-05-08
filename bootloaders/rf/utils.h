@@ -16,11 +16,11 @@
 #define MORSE_OUT_ON()      P1OUT |= BIT7
 #define MORSE_OUT_OFF()     P1OUT &= ~BIT7
 
-#define DOT_DURATION 60
+#define DOT_DURATION 5
 
 void delay(int millis);
 
-void blink(int times, int time);
+void blink(int times, int delay_time);
 
 char* char2morse(char c);
 
