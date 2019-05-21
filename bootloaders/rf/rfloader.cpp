@@ -63,6 +63,68 @@ bool readHexLine(uint16_t lineNumber) {
   return false;
 }
 
+void factoryReset() {
+  CC430FLASH nvMem;
+  uint16_t address = USER_ROMADDR;
+
+  //
+//  gwap.nvolatToFactoryDefaults();
+
+//  // Erase user code
+//  do {
+//    nvMem.eraseSegment((uint8_t *) address);
+//    address += 512;
+//  } while (address < USER_END_ROMADDR);
+
+  // Erase info memory
+//  nvMem.eraseSegment((uint8_t *) INFOMEM_CONFIG);
+
+  // Set "flash ok" memory cell to zero
+  uint8_t flashOk[1] = { 0x00 };
+  nvMem.write((uint8_t *) NVOLAT_FACTORY_RESET_DONE, flashOk, 1);
+
+  uint8_t data[2] = { 0xFF, 0xFF };
+  nvMem.write((uint8_t *) USER_RESET_VECTOR, data, 2);
+
+  // Working networkID
+  uint8_t syncW[] = { NO_NETWORK_SYNCWORD_1, NO_NETWORK_SYNCWORD_0 };
+  nvMem.write((uint8_t *) NVOLAT_WORKING_NETWORKID_ADDR, syncW, sizeof(syncW));
+
+  // Working AES password
+  uint8_t pwd[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  nvMem.write((uint8_t *) NVOLAT_WORKING_AES_PASSWORD, pwd, sizeof(pwd));
+
+  // Packet Key
+  uint8_t pcktKey[] = { 0, 0, 0, 0 };
+  nvMem.write((uint8_t *) NVOLAT_PACKET_KEY, pcktKey, sizeof(pcktKey));
+
+  // Bump count
+  uint8_t count[] = { 0, 0, 0, 0 };
+  nvMem.write((uint8_t *) NVOLAT_BUMP_COUNT, count, sizeof(count));
+
+  // Offset degrees
+  uint8_t degrees[] = { 0, 0 };
+  nvMem.write((uint8_t *) NVOLAT_OFFSET_DEGREES, count, sizeof(degrees));
+
+  // Accelerometer sesibility
+  uint8_t sensibility[] = { DEFAULT_ACCEL_SENSIBILITY };
+  nvMem.write((uint8_t *) NVOLAT_ACCEL_SENSIBILITY, count, sizeof(sensibility));
+
+  for (int i = 0; i < 6; i++) {
+    LED_ON();
+    delayClockCycles(1000000L);
+    LED_OFF();
+    delayClockCycles(1000000L);
+  }
+
+  // Trigger a BOR
+//  PMMCTL0_H = 0xA5;
+//  PMMCTL0_L |= PMMSWBOR;
+//  PMMCTL0_H = 0x00;
+
+//  while (true);
+}
+
 /**
  * main
  *
@@ -72,9 +134,13 @@ int main(void) {
   uint8_t state, status, bytes, i, count = 0;
   // Current firmware line being queried from hex file
   uint16_t lineNumber = 0;
+  CC430FLASH flash;
+  TIMER1A0 timer;
 
   CONFIG_LED();
   CONFIG_MORSE_OUT();
+  CONFIG_RESET_PIN();
+
 
   // This flag will tell us whether wireless bootloading needs to start or not
   bool *ptr1;
@@ -89,6 +155,25 @@ int main(void) {
   // Disable interrupts
   __disable_interrupt();
 
+  // Check for factory reset
+
+  uint32_t counter = 0;
+  while (IS_RESET_PIN_LOW()) {
+    if (counter >= 50000) {
+      factoryReset();
+      break;
+    }
+    counter++;
+  }
+
+  // Some fancy blinking for signaling that we're on bootloader
+  for (int j = 0; j < 2; j++) {
+    LED_ON();
+    delayClockCycles(10000L);
+    LED_OFF();
+    delayClockCycles(10000L);
+  }
+
   // Init core
   initCore();
 
@@ -102,17 +187,21 @@ int main(void) {
 //  startCommunication();
 //  flashMorseString("start\n");
 
+  // Read "flash ok" cell memory
+//  uint8_t flashOk[1];
+//  flash.read((uint8_t *) NVOLAT_FACTORY_RESET_DONE, flashOk, 1);
+  bool *pointer;
+  pointer = (bool *) NVOLAT_FACTORY_RESET_DONE;
+  bool flashOk = *pointer;       // Read value
+
   // Valid starting address of user code?
-  if (userCodeAddr != 0xFFFF) {
+  if (flashOk) {
     // Jump to user code if the wireless bootloader was not called from there
     if (runUserCode) {
 //      flashMorseString("jump run user code\n");
       jumpToUserCode();
     }
   }
-
-  CC430FLASH flash;
-  TIMER1A0 timer;
 
   // Init GWAP comms
   gwap.init(CFREQ_868, WORKING_MODE);
@@ -207,6 +296,22 @@ int main(void) {
         lineNumber++;
       } else  // Probably end of file
       {
+        // Ask for line n+1 for a while (fake line)
+        lineNumber++;
+        i = 0;
+        while(i < 10) {
+          timer.start(RESPONSE_TIMEOUT);
+          LED_ON();
+          TRANSMIT_GWAP_QUERY_LINE(lineNumber);
+          LED_OFF();
+          // Wait timer timeout before asking again
+          while(!timer.timeout()) { ;; }
+          i++;
+        }
+
+        // Write "flash ok" memory cell
+        uint8_t data[1] = { 0x01 };
+        flash.write((uint8_t *) NVOLAT_FACTORY_RESET_DONE, data, 1);
 
         // Erase the vector table segment
         flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);

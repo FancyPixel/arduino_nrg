@@ -10,6 +10,17 @@
 #include "gwap.h"
 //#include "utils.h"
 
+#define NVOLAT_FACTORY_RESET_DONE 0x19FF
+#define NO_NETWORK_SYNCWORD_1 0xFF
+#define NO_NETWORK_SYNCWORD_0 0xFF
+#define DEFAULT_ACCEL_SENSIBILITY 250  // The lower the number, the higher the sensibility
+#define NVOLAT_WORKING_NETWORKID_ADDR 0x20  //  2 bytes reg // Matches NVOLAT_FIRST_CUSTOM defined in gwap/nvolat.h
+#define NVOLAT_WORKING_AES_PASSWORD 0x22    // 16 bytes reg
+#define NVOLAT_PACKET_KEY 0x32              //  4 bytes reg
+#define NVOLAT_BUMP_COUNT 0x36              //  4 bytes reg
+#define NVOLAT_OFFSET_DEGREES 0x3A          //  2 bytes reg
+#define NVOLAT_ACCEL_SENSIBILITY 0x3C       //  1 byte reg
+
 /**
  * Uncomment only in case of using GDB bootloader
  */
@@ -51,6 +62,9 @@
 #define CONFIG_MORSE_OUT()  P1DIR |= BIT7; P1OUT &= ~BIT7
 #define MORSE_OUT_ON()      P1OUT |= BIT7
 #define MORSE_OUT_OFF()     P1OUT &= ~BIT7
+
+#define CONFIG_RESET_PIN()  P2DIR &= ~BIT7
+#define IS_RESET_PIN_LOW()  (P2IN & BIT7) == 0
 
 /**
  * Type of HEX file record
