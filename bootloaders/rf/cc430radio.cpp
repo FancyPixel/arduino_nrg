@@ -35,7 +35,7 @@ CC430RADIO::CC430RADIO(void)
  * 
  * Configure CC430 radio registers
  */
-void CC430RADIO::setCCregs(void) 
+void CC430RADIO::setCCregs(void)
 {
   WriteSingleReg(IOCFG2, CCDEF_IOCFG2);
   WriteSingleReg(IOCFG0,  CCDEF_IOCFG0);
@@ -54,7 +54,7 @@ void CC430RADIO::setCCregs(void)
   setChannel(channel);
 
   WriteSingleReg(FSCTRL1,  CCDEF_FSCTRL1);
-  WriteSingleReg(FSCTRL0,  CCDEF_FSCTRL0);    
+  WriteSingleReg(FSCTRL0,  CCDEF_FSCTRL0);
 
   // Set default carrier frequency = 868 MHz
   setCarrierFreq(carrierFreq);
@@ -85,43 +85,82 @@ void CC430RADIO::setCCregs(void)
   WriteSingleReg(FSTEST,  CCDEF_FSTEST);
   WriteSingleReg(TEST1,  CCDEF_TEST1);
   WriteSingleReg(TEST0,  CCDEF_TEST0);
+
+  enableCCA();
 }
 
 /**
  * sendData
- * 
+ *
  * Send data packet via RF
- * 
+ *
  * @param packet Packet to be transmitted. First byte is the destination address
  *
  * @return True if the transmission succeeds. False otherwise
  */
 bool CC430RADIO::sendData(CCPACKET packet)
 {
-  bool res = true;
+  bool res = false;
+  uint8_t marcState;
+  uint16_t count;
 
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
-  MRFI_ENABLE_SYNC_PIN_INT();
+  MRFI_CLEAR_GDO0_INT_FLAG();
 
-  // Disable Rx
+  // Disable Rx and enter in IDLE state
   setRxOffState();
+
+  // Enter RX state again
+  setRxState();
+
+  // Check that the RX state has been entered
+  while (((marcState = ReadSingleReg(MARCSTATE)) & 0x1F) != 0x0D)
+  {
+    if (marcState == 0x11)        // RX_OVERFLOW
+      flushRxFifo();              // flush receive queue
+  }
+
+  delayMicroseconds(500);
 
   // Set data length at the first position of the TX FIFO
   WriteSingleReg(RF_TXFIFOWR,  packet.length);
   // Write data into the TX FIFO
   WriteBurstReg(RF_TXFIFOWR, packet.data, packet.length);
 
+  MRFI_CLEAR_GDO0_INT_FLAG();
+
   // Transmit
   setTxState();
 
-  // Wait for transmision to complete
-  while(!MRFI_SYNC_PIN_INT_FLAG_IS_SET());
-  
-  // Clear interrupt flag
+  // Check that TX state is being entered (state = RXTX_SETTLING)
+  marcState = ReadSingleReg(MARCSTATE) & 0x1F;
+  if((marcState != 0x13) && (marcState != 0x14) && (marcState != 0x15))
+  {
+    setIdleState();       // Enter IDLE state
+    flushTxFifo();        // Flush Tx FIFO
+    setRxState();         // Back to RX state
+    return false;
+  }
+
+  delayMicroseconds(250);
+  count = 0xFFFF;
+  // Wait until packet transmission
+  while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
+
+  if (!count)
+  {
+    setIdleState();       // Enter IDLE state
+    flushTxFifo();        // Flush Tx FIFO
+    res = false;
+  }
+    // Check that the TX FIFO is empty
+  else if((ReadSingleReg(TXBYTES) & 0x7F) == 0)
+    res = true;
+
+  // Clear interrupt flags
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
-  
-  MRFI_DISABLE_SYNC_PIN_INT();
-  
+  MRFI_CLEAR_GDO0_INT_FLAG();
+
   // Enter back into RX state
   setRxOnState();
 

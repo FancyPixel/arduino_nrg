@@ -11,10 +11,10 @@
  */
 enum CFREQ
 {
-  CFREQ_868 = 0,
-  CFREQ_915,
-  CFREQ_433,
-  CFREQ_LAST
+    CFREQ_868 = 0,
+    CFREQ_915,
+    CFREQ_433,
+    CFREQ_LAST
 };
 
 /**
@@ -22,10 +22,10 @@ enum CFREQ
  */
 enum RFSTATE
 {
-  RFSTATE_IDLE = 0,
-  RFSTATE_RXON,
-  RFSTATE_RXOFF,
-  RFSTATE_PWRDWN
+    RFSTATE_IDLE = 0,
+    RFSTATE_RXON,
+    RFSTATE_RXOFF,
+    RFSTATE_PWRDWN
 };
 
 
@@ -100,6 +100,8 @@ enum RFSTATE
  * Macros
  */
 // RADIO
+#define MRFI_CLEAR_GDO0_INT_FLAG()                  (RF1AIFG &= ~BIT0)
+#define MRFI_GDO0_INT_FLAG_IS_SET()                 (RF1AIFG & BIT0)
 #define MRFI_ENABLE_SYNC_PIN_INT()                  (RF1AIE |= BIT9)
 #define MRFI_DISABLE_SYNC_PIN_INT()                 (RF1AIE &= ~BIT9)
 #define MRFI_CLEAR_SYNC_PIN_INT_FLAG()              (RF1AIFG &= ~BIT9)
@@ -124,18 +126,25 @@ enum RFSTATE
 // Enable Rx state
 #define setRxState                setRxOnState
 
+
+inline void delayMicroseconds(const uint16_t us)
+{
+  const uint16_t cyclesPerMicro = F_CPU/1000000L;
+  __delay_cycles((us * cyclesPerMicro));
+}
+
 /**
  * Class: CC430RADIO
- * 
+ *
  * Description:
  * CC430RADIO interface
  */
 class CC430RADIO
 {
-  private:
+private:
     /**
      * setCCregs
-     * 
+     *
      * Configure CC1101 registers
      */
     void setCCregs(void);
@@ -173,7 +182,7 @@ public:
 
     /**
      * CC430RADIO
-     * 
+     *
      * Class constructor
      */
     CC430RADIO(void);
@@ -181,23 +190,23 @@ public:
 
     /**
      * reset
-     * 
+     *
      * Reset radio core
      */
     ALWAYS_INLINE
-    void reset(void) 
+    void reset(void)
     {
       Strobe(RF_SRES);                      // Reset the Radio Core
       Strobe(RF_SNOP);                      // Reset Radio Pointer
 
       setCCregs();                          // Configure CC1101 interface
-      
+
       MRFI_DISABLE_SYNC_PIN_INT();          // Disable RF interrupts
     }
 
     /**
      * init
-     * 
+     *
      * Initialize CC1101
      *
      * @param ch RF channel
@@ -219,17 +228,17 @@ public:
       // Enter RX state
       setRxOnState();
     }
-    
+
     /**
      * setSyncWord
-     * 
+     *
      * Set synchronization word
-     * 
+     *
      * @param syncH	Synchronization word - High byte
      * @param syncL	Synchronization word - Low byte
      */
     ALWAYS_INLINE
-    void setSyncWord(uint8_t syncH, uint8_t syncL) 
+    void setSyncWord(uint8_t syncH, uint8_t syncL)
     {
       WriteSingleReg(SYNC1, syncH);
       WriteSingleReg(SYNC0, syncL);
@@ -239,22 +248,22 @@ public:
 
     /**
      * setSyncWord (overriding method)
-     * 
+     *
      * Set synchronization word
-     * 
+     *
      * @param syncH	Synchronization word - pointer to 2-byte
      */
     ALWAYS_INLINE
-    void setSyncWord(uint8_t *sync) 
+    void setSyncWord(uint8_t *sync)
     {
       CC430RADIO::setSyncWord(sync[0], sync[1]);
     }
-    
+
     /**
      * setDevAddress
-     * 
+     *
      * Set device address
-     * 
+     *
      * @param addr Device address
      */
     ALWAYS_INLINE
@@ -266,13 +275,13 @@ public:
 
     /**
      * setChannel
-     * 
+     *
      * Set frequency channel
-     * 
+     *
      * @param chnl Frequency channel
      */
     ALWAYS_INLINE
-    void setChannel(uint8_t chnl) 
+    void setChannel(uint8_t chnl)
     {
       WriteSingleReg(CHANNR,  chnl);
       channel = chnl;
@@ -280,9 +289,9 @@ public:
 
     /**
      * setCarrierFreq
-     * 
+     *
      * Set carrier frequency
-     * 
+     *
      * @param freq New carrier frequency
      */
     ALWAYS_INLINE
@@ -306,18 +315,18 @@ public:
           WriteSingleReg(FREQ0,  CCDEF_FREQ0_868);
           break;
       }
-       
-      carrierFreq = freq;  
+
+      carrierFreq = freq;
     }
 
     /**
      * setRxOnState
-     * 
+     *
      * Put radio in Rx mode
      */
     ALWAYS_INLINE
     void setRxOnState(void)
-    {  
+    {
       // Clear Rx interrupts
       MRFI_CLEAR_SYNC_PIN_INT_FLAG();
 
@@ -330,7 +339,7 @@ public:
 
     /**
      * setRxOffState
-     * 
+     *
      * Disable Rx mode
      */
     ALWAYS_INLINE
@@ -340,26 +349,26 @@ public:
       MRFI_DISABLE_SYNC_PIN_INT();
 
       // It is possible that ReceiveOff is called while radio is receiving a packet.
-      // Therefore, it is necessary to flush the RX FIFO after issuing IDLE strobe 
+      // Therefore, it is necessary to flush the RX FIFO after issuing IDLE strobe
       // such that the RXFIFO is empty prior to receiving a packet.
-      
+
       // Enter IDLE state
       MRFI_STROBE_IDLE_AND_WAIT()
-      
+
       // Flush Rx FIFO
       Strobe(RF_SFRX);
-      
+
       // Clear Rx interrupts
       MRFI_CLEAR_SYNC_PIN_INT_FLAG();
     }
 
     /**
      * setPowerDownState
-     * 
+     *
      * Put radio into power-down state
      */
     ALWAYS_INLINE
-    void setPowerDownState() 
+    void setPowerDownState()
     {
       /* Chip bug: Radio does not come out of this SLEEP when put to sleep
        * using the SPWD cmd. However, it does wakes up if SXOFF was used to
@@ -373,7 +382,7 @@ public:
 
     /**
      * wakeUp
-     * 
+     *
      * Wake-up core
      */
     ALWAYS_INLINE
@@ -385,9 +394,9 @@ public:
 
     /**
      * sendData
-     * 
+     *
      * Send data packet via RF
-     * 
+     *
      * @param packet Packet to be transmitted. First byte is the destination address
      *
      *  @return True if the transmission succeeds. False otherwise
@@ -396,9 +405,9 @@ public:
 
     /**
      * receiveData
-     * 
+     *
      * Read data packet from RX FIFO
-     * 
+     *
      * @return Amount of bytes received
      */
     uint8_t receiveData(CCPACKET *packet);
@@ -427,7 +436,7 @@ public:
      * @param enable True if address check has to be enabled
      */
     ALWAYS_INLINE
-    void enableCCA(bool enable)
+    void enableCCA(bool enable = true)
     {
       if (enable)
         WriteSingleReg(MCSM1, CCDEF_MCSM1);
