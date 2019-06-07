@@ -23,9 +23,9 @@
  */
 
 extern "C" {
-  #include <stdlib.h>
-  #include <string.h>
-  #include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
 }
 
 #include "Wire.h"
@@ -38,12 +38,14 @@ uint8_t TwoWire::txBuffer[BUFFER_LENGTH];
 uint8_t TwoWire::txBufferIndex = 0;
 uint8_t TwoWire::txBufferLength = 0;
 
+uint32_t TwoWire::clock = DEFAULT_I2C_CLOCK_FREQ;
+
 void (*TwoWire::user_onRequest)(void);
 void (*TwoWire::user_onReceive)(int);
 
 /**
  * begin
- * 
+ *
  * Initialize I2C master port
  */
 void TwoWire::begin(void)
@@ -53,9 +55,9 @@ void TwoWire::begin(void)
 
 /**
  * begin
- * 
+ *
  * Initialize I2C master port
- * 
+ *
  * @param address Slave address to request data from
  */
 void TwoWire::begin(uint8_t address)
@@ -71,16 +73,16 @@ void TwoWire::begin(int address)
 
 /**
  * requestFrom
- * 
+ *
  * Used by the master to request bytes from a slave device.
  * The bytes may then be retrieved with the available() and read() functions.
- * 
+ *
  * @param address Slave address to request data from
  * @param quantity number of bytes to request
  * @param sendStop true will send a stop message after the request, releasing the bus.
  *                  false will continually send a restart after the request, keeping
  *                  the connection active.
- * 
+ *
  * @return number of bytes returned from the slave device
  */
 uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
@@ -106,7 +108,7 @@ uint8_t TwoWire::requestFrom(int address, int quantity, int sendStop)
 
 /**
  * beginTransmission
- * 
+ *
  * Start I2C transaction
  *
  * @param slaAddr I2C slave address
@@ -116,12 +118,12 @@ void TwoWire::beginTransmission(uint8_t address)
   // reset tx buffer iterator vars
   txBufferIndex = 0;
   txBufferLength = 0;
-  
+
   // reset rx buffer iterator vars
   rxBufferIndex = 0;
   rxBufferLength = 0;
-  
-  i2cPort.beginTransmission((uint16_t)address);
+
+  i2cPort.beginTransmission((uint16_t)address, clock);
 }
 
 void TwoWire::beginTransmission(int address)
@@ -131,14 +133,14 @@ void TwoWire::beginTransmission(int address)
 
 /**
  * endTransmission
- * 
+ *
  * Ends a transmission to a slave device that was begun by beginTransmission() and transmits
  * the bytes that were queued by write()
- * 
+ *
  * @param sendStop true will send a stop message after the request, releasing the bus.
  *                  false will continually send a restart after the request, keeping
  *                  the connection active.
- * 
+ *
  * @return number of bytes transmitted to the slave device
  */
 uint8_t TwoWire::endTransmission(uint8_t sendStop)
@@ -149,9 +151,15 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop)
   // reset tx buffer iterator vars
   txBufferIndex = 0;
   txBufferLength = 0;
- 
+
   return ret;
 }
+
+
+void TwoWire::setClock(uint32_t clockFreq) {
+  clock = clockFreq;
+}
+
 
 /**
  * write
@@ -165,7 +173,7 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop)
 size_t TwoWire::write(uint8_t data)
 {
   txBuffer[txBufferLength++] = data;
- 
+
   return 1;
 }
 
@@ -182,7 +190,7 @@ size_t TwoWire::write(uint8_t data)
 size_t TwoWire::write(const uint8_t *data, size_t quantity)
 {
   uint8_t i;
-  
+
   for(i=0 ; i<quantity ; i++)
     txBuffer[txBufferLength++] = data[i];
 
@@ -211,7 +219,7 @@ int TwoWire::available(void)
 int TwoWire::read(void)
 {
   int value = -1;
-  
+
   // get each successive byte on each call
   if(rxBufferIndex < rxBufferLength)
   {
@@ -232,7 +240,7 @@ int TwoWire::read(void)
 int TwoWire::peek(void)
 {
   int value = -1;
-  
+
   if(rxBufferIndex < rxBufferLength){
     value = rxBuffer[rxBufferIndex];
   }

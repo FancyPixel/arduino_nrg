@@ -31,12 +31,12 @@
 
 class CC430I2C
 {
-  public:
+public:
     /**
      * Slave address
      */
     uint16_t slaveAddress;
-  
+
     /**
      * begin
      * 
@@ -51,7 +51,7 @@ class CC430I2C
      *
      * @param slaAddr I2C slave address
      */
-    void beginTransmission(uint16_t slaAddr);
+    void beginTransmission(uint16_t slaAddr, uint32_t clock);
 
     /**
      * write
