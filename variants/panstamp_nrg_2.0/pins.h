@@ -41,6 +41,12 @@
 // SPI
 #define pinSPImap()       P1MAP0 = PM_UCB0SIMO; P1MAP1 = PM_UCB0SOMI; P1MAP2 = PM_UCB0CLK
 #define pinSPIconfig()    P1SEL |= BIT0 | BIT1 | BIT2  // Set P1.0, P1.1 and P1.2 to USCI function
+#define SCK   2
+#define MISO  1
+#define MOSI  0
+#define SPISCK_SET_MODE (PORT_SELECTION0)
+#define SPIMOSI_SET_MODE (PORT_SELECTION0)
+#define SPIMISO_SET_MODE (PORT_SELECTION0)
 
 #define NOT_A_PORT 0
 #define NOT_A_PIN 0
@@ -220,7 +226,7 @@ const uint8_t digital_pin_to_timer[] = {
   NOT_ON_TIMER, /* P3.4 */
   NOT_ON_TIMER, /* P3.5 */
   NOT_ON_TIMER, /* P3.6 */
-	NOT_ON_TIMER  /* P3.7 -> ONBOARD_LED */
+  T1A2  /* P3.7 -> ONBOARD_LED */
 };
 
 const uint8_t digital_pin_to_port[] = {
