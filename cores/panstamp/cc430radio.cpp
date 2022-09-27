@@ -237,6 +237,11 @@ void CC430RADIO::setCarrierFreq(uint8_t freq)
       WriteSingleReg(FREQ1,  CCDEF_FREQ1_433);
       WriteSingleReg(FREQ0,  CCDEF_FREQ0_433);
       break;
+    case CFREQ_869_8:
+      WriteSingleReg(FREQ2,  CCDEF_FREQ2_869_8);
+      WriteSingleReg(FREQ1,  CCDEF_FREQ1_869_8);
+      WriteSingleReg(FREQ0,  CCDEF_FREQ0_869_8);
+      break;
     default:
       WriteSingleReg(FREQ2,  CCDEF_FREQ2_868);
       WriteSingleReg(FREQ1,  CCDEF_FREQ1_868);
@@ -461,11 +466,17 @@ uint8_t CC430RADIO::receiveData(CCPACKET *packet)
 
       packet->length = rxBuffer[0];
 
-      for(i=0 ; i<packet->length; i++)
+      for(i = 0; i < packet->length; i++) {
         packet->data[i] = rxBuffer[i+1];
+      }
 
       // Read RSSI
       packet->rssi = rxBuffer[++i];
+      if (packet->rssi >= 128) {
+        packet->rssi_dbm = ((((int16_t)packet->rssi) - 256) / 2) - RSSI_OFFSET;
+      } else {
+        packet->rssi_dbm = (((int16_t)packet->rssi) / 2) - RSSI_OFFSET;
+      }
       // Read LQI and CRC_OK
       packet->lqi = rxBuffer[++i] & 0x7F;
       packet->crc_ok = rxBuffer[i] >> 7;

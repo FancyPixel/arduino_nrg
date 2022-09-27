@@ -189,7 +189,10 @@ void digitalWrite(uint8_t pin, uint8_t state);
 uint16_t analogRead(uint8_t pin);
 void analogReference(uint16_t ref);
 void analogWrite(uint8_t pin, uint16_t val);
-void analogFrequency(uint16_t freq);
+void stopAnalogWrite(uint8_t pin);
+void setAnalogFrequency(uint16_t freq);
+
+uint16_t getAnalogPeriod();
 
 // wirong_pulse.cpp
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);

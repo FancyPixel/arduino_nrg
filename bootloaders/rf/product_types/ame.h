@@ -14,6 +14,6 @@ const uint8_t FIRMWARE_VERSION[] = { 0, 0, 0, 1 };
 /**
  * Product code
  */
-const uint8_t GWAP_PRODUCT_CODE[] = { 0, 0, 0, 4 };
+const uint8_t GWAP_PRODUCT_CODE[] = { 0, 0, 0, 5 };
 
 #endif

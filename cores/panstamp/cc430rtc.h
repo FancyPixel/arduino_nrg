@@ -134,6 +134,20 @@ class CC430RTC
     void sleep(uint16_t time, RTCSRC source=RTCSRC_XT1);
 
     /**
+    * sleepMs
+    *
+    *  MAX time is 65536 milliseconds
+    *
+    * Put panStamp into Power-down state during "time".
+    * This function uses RTC connected to an external 32.768KHz crystal
+    * in order to exit (interrupt) from the power-down state
+    *
+    * @param time Sleeping time in milliseconds. MAX time is 65536 milliseconds
+    * @param ACLK source (RTCSRC_XT1 (default) or RTCSRC_VLO)
+    */
+    void sleepMs(uint32_t millisecs, RTCSRC source = RTCSRC_XT1);
+
+    /**
      * disableAlarm
      * 
      * Enable RTC alarm

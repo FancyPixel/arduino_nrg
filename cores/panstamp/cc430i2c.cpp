@@ -30,7 +30,7 @@
  * 
  * Initialize I2C port
  */
-void CC430I2C::begin(void)
+void CC430I2C::begin(void) 
 {
   /**
    * Pin mapping
@@ -39,7 +39,7 @@ void CC430I2C::begin(void)
   PMAPCTL |= PMAPRECFG;                   // Leave Pin mapping open
   pinI2Cmap();                            // Map I2C pins
   PMAPPWD = 0;		                        // Lock port mapping registers
-
+   
   pinI2Cconfig();                         // Configure I2C pins
 }
 
@@ -52,7 +52,7 @@ void CC430I2C::begin(void)
  */
 void CC430I2C::beginTransmission(uint16_t slaAddr, uint32_t clock)
 {
-  uint32_t clkDiv = (UCSSEL_2 + UCSWRST) / clock;
+  uint32_t clkDiv = SYSTEM_CLK_FREQ / clock;
 
   UCB0CTL1 |= UCSWRST;                    // Enable SW reset
   UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;   // I2C Master, synchronous mode
@@ -62,7 +62,7 @@ void CC430I2C::beginTransmission(uint16_t slaAddr, uint32_t clock)
   UCB0I2CSA = slaAddr;                    // Slave Address
   UCB0CTL1 &= ~UCSWRST;                   // Clear SW reset, resume operation
   UCB0IFG = 0;                            // Reset interrupt flags
-
+  
   slaveAddress = slaAddr;
 }
 
@@ -77,7 +77,7 @@ void CC430I2C::beginTransmission(uint16_t slaAddr, uint32_t clock)
  *
  * @return Amount of bytes transmitted
  */
-uint16_t CC430I2C::write(const uint8_t *buf, uint16_t len, bool stop)
+uint16_t CC430I2C::write(const uint8_t *buf, uint16_t len, bool stop) 
 {
   uint16_t i, res = len;
   uint32_t timeout;
@@ -85,7 +85,7 @@ uint16_t CC430I2C::write(const uint8_t *buf, uint16_t len, bool stop)
   UCB0I2CSA = slaveAddress;
   UCB0IFG = 0;                         // Reset interrupt flags
   UCB0CTL1 |= UCTR + UCTXSTT;          // Send start condition and slave address
-
+  
   while (!(UCB0IFG & UCTXIFG));       // Wait until start condition is sent
 
   // Send bytes
@@ -119,7 +119,7 @@ uint16_t CC430I2C::write(const uint8_t *buf, uint16_t len, bool stop)
  *
  * @return Amount of bytes received
  */
-uint16_t CC430I2C::read(uint8_t *buf, uint16_t len, bool stop)
+uint16_t CC430I2C::read(uint8_t *buf, uint16_t len, bool stop) 
 {
   uint16_t i, res = len;
   uint32_t timeout;

@@ -243,6 +243,15 @@ void flashMorseChar(char c) {
   }
 }
 
+void flashMorseLine(char* text) {
+  flashMorseString(text);
+  flashMorseString("\n");
+}
+
+void flashMorseLine(int i) {
+  flashMorseString(i);
+  flashMorseString("\n");
+}
 
 void flashMorseString(char* text) {
   int size = stringLen(text);

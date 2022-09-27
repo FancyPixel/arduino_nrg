@@ -16,7 +16,7 @@
 #define MORSE_OUT_ON()      P1OUT |= BIT7
 #define MORSE_OUT_OFF()     P1OUT &= ~BIT7
 
-#define DOT_DURATION 5
+#define DOT_DURATION 3
 
 void delay(int millis);
 
@@ -34,5 +34,7 @@ void morseBlink(int duration);
 void flashMorseChar(char c);
 void flashMorseString(char* text);
 void flashMorseString(int i);
+void flashMorseLine(char* text);
+void flashMorseLine(int i);
 
 #endif

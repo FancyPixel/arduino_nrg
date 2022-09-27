@@ -3,146 +3,68 @@
 //#define WORKING_MODE MODE_4800
 #define WORKING_MODE MODE_38400
 
-// Responses from server have to be received before 300 ms after sending
-// the query
-#define RESPONSE_TIMEOUT 200
+// Responses from server have to be received before 200 ms after sending the query
+#define RESPONSE_TIMEOUT 500
+#define MAX_SKETCH_LINES 1600
+#define MAX_FAILED_LINE_REQUESTS 3
 
-// User code address
-uint16_t userCodeAddr;
 // Global packet
 CCPACKET packet;
-// New firmware line received
-volatile bool lineReceived = false;
-// First hex line flag
-bool firstLine = true;
-// Length of last line received
-uint8_t lineLength = 0;
-// Pointer to line buffer
-uint8_t *ptrLine;
-// ISR vector table
-uint8_t isrTable[8][16];
 bool isVirgin = false;
+uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
 
-
-/**
- * readHexLine
- *
- * Read wireless packet and extract HEX line
- *
- * @param lineNumber Line number being queried
- *
- * @return Correct line received (true) or not (false)
- */
-bool readHexLine(uint16_t lineNumber) {
+ALWAYS_INLINE
+bool readHexLine() {
   // Any packet waiting to be read?
   if (gwap.radio.receiveData(&packet) > 0) {
     // Is CRC OK?
     if (packet.crc_ok) {
       // Function
       if ((packet.GWAP_FUNCTION) == GWAPFUNCT_STA) {
-        // Data payload
-
-        ptrLine = packet.data + GWAP_DATA_HEAD_LEN;
-        lineLength = packet.length - GWAP_DATA_HEAD_LEN - 1;
-
-        // // Firmware page received?
+        // Break if packet pcode == our pcode
+        if (!gwap.hasCCPACKETMyProductCode(&packet)) return false;
+        // Firmware page received?
         if (packet.GWAP_REGID == REGI_FWVERSION) {
-          // Correct data length?
-          if (lineLength <= BYTES_PER_LINE) {
-            // Correct line number?
-            if (getLineNumber(ptrLine) == lineNumber) {
-              ptrLine += 2;
-              lineLength -= 2;
-              lineReceived = true;
-              return true;
-            }
-          }
+          return true;
         }
       }
     }
   }
+
   return false;
 }
 
-void factoryReset() {
-  CC430FLASH nvMem;
-  uint16_t address = USER_ROMADDR;
-
-  //
-//  gwap.nvolatToFactoryDefaults();
-
-//  // Erase user code
-//  do {
-//    nvMem.eraseSegment((uint8_t *) address);
-//    address += 512;
-//  } while (address < USER_END_ROMADDR);
-
-  // Erase info memory
-  nvMem.eraseSegment((uint8_t *) INFOMEM_CONFIG);
-
-  // Set "flash ok" memory cell to zero
-//  uint8_t flashOk[1] = { 0x00 };
-//  nvMem.write((uint8_t *) NVOLAT_FACTORY_RESET_DONE, flashOk, 1);
-
-//  uint8_t data[2] = { 0xFF, 0xFF };
-//  nvMem.write((uint8_t *) USER_RESET_VECTOR, data, 2);
-
-  // Working networkID
-//  uint8_t syncW[] = { NO_NETWORK_SYNCWORD_1, NO_NETWORK_SYNCWORD_0 };
-//  nvMem.write((uint8_t *) NVOLAT_WORKING_NETWORKID_ADDR, syncW, sizeof(syncW));
-//
-//  // Working AES password
-//  uint8_t pwd[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-//  nvMem.write((uint8_t *) NVOLAT_WORKING_AES_PASSWORD, pwd, sizeof(pwd));
-//
-//  // Packet Key
-//  uint8_t pcktKey[] = { 0, 0, 0, 0 };
-//  nvMem.write((uint8_t *) NVOLAT_PACKET_KEY, pcktKey, sizeof(pcktKey));
-//
-//  // Bump count
-//  uint8_t count[] = { 0, 0, 0, 0 };
-//  nvMem.write((uint8_t *) NVOLAT_BUMP_COUNT, count, sizeof(count));
-//
-//  // Offset degrees
-//  uint8_t degrees[] = { 0, 0 };
-//  nvMem.write((uint8_t *) NVOLAT_OFFSET_DEGREES, count, sizeof(degrees));
-//
-//  // Accelerometer sesibility
-//  uint8_t sensibility[] = { DEFAULT_ACCEL_SENSIBILITY };
-//  nvMem.write((uint8_t *) NVOLAT_ACCEL_SENSIBILITY, count, sizeof(sensibility));
-
-  for (int i = 0; i < 6; i++) {
-    LED_ON();
-    delayClockCycles(1000000L);
-    LED_OFF();
-    delayClockCycles(1000000L);
-  }
-
-  isVirgin = true;
-  // Trigger a BOR
-//  PMMCTL0_H = 0xA5;
-//  PMMCTL0_L |= PMMSWBOR;
-//  PMMCTL0_H = 0x00;
-
-//  while (true);
-}
-
-/**
- * main
- *
- * Main routine
- */
 int main(void) {
-  uint8_t state, status, bytes, i, count = 0;
-  // Current firmware line being queried from hex file
-  uint16_t lineNumber = 0;
-  CC430FLASH flash;
-  TIMER1A0 timer;
+  bool firstLine = true;
+  // Length of last line received
+  uint8_t dataLineLength = 0;
+  // Pointer to line buffer
+  uint8_t *dataLine;
+  // ISR vector table
+  uint8_t isrTable[8][16];
+  // User code address
+  uint16_t userCodeAddr;
+  bool correctLineReceived = false;
+  uint16_t firmwareVersion = 0xFFFF;
+  uint32_t fwVersionAndLineNumber = 0xFFFFFFFF;
+  uint16_t _fwVersion = 0xFFFF; // This must be here
+  uint8_t status, bytes, i;
+  bool requestLine = true;
+  uint16_t failedLineRequests = 0;
+  uint16_t receivedLineNumber = 0;
+  uint16_t nextLine;
+  uint16_t lastLineNumber = -10; // Init a lot negative
+  /*
+   * *** IMPORTANT ***
+   * DO NOT CHANGE the order of the code lines if you want have a working morse decoding
+   */
 
   CONFIG_LED();
-  CONFIG_MORSE_OUT();
+//  CONFIG_MORSE_OUT();
   CONFIG_RESET_PIN();
 
+  // *** You must uncomment this line in order to startup morse decoding ***
+  //  flashMorseString("start\n");
 
   // This flag will tell us whether wireless bootloading needs to start or not
   bool *ptr1;
@@ -158,7 +80,6 @@ int main(void) {
   __disable_interrupt();
 
   // Check for factory reset
-
   uint32_t counter = 0;
   while (IS_RESET_PIN_LOW()) {
     if (counter >= 400000) {
@@ -171,9 +92,9 @@ int main(void) {
   // Some fancy blinking for signaling that we're on bootloader
   for (int j = 0; j < 2; j++) {
     LED_ON();
-    delayClockCycles(10000L);
+    delayClockCycles(5000L);
     LED_OFF();
-    delayClockCycles(10000L);
+    delayClockCycles(5000L);
   }
 
   // Init core
@@ -183,34 +104,32 @@ int main(void) {
   if (!isVirgin && (userCodeAddr != 0xFFFF)) {
     // Jump to user code if the wireless bootloader was not called from there
     if (runUserCode) {
-//      flashMorseString("jump run user code\n");
       jumpToUserCode();
     }
   }
 
+  CC430FLASH flash;
+  TIMER1A0 timer;
+
   // Init GWAP comms
   gwap.init(CFREQ_868, WORKING_MODE);
-
-  // Serial.println("After gwap init");
-  // Transmit default product code only if no user application is still flashed
-  if (userCodeAddr == 0xFFFF) {
-    TRANSMIT_GWAP_STATUS_PCODE();
-  }
-
-  // Enter upgrade mode
-  state = (uint8_t) SYSTATE_UPGRADE;
-  TRANSMIT_GWAP_STATUS_STATE(state);
 
   // Pointer at the begining of user flash
   uint16_t address = USER_ROMADDR;
 
   while (1) {
-    // Wait for new line from server
-    while (!lineReceived) {
-      LED_ON();
-      // Query firmware line
-      TRANSMIT_GWAP_QUERY_LINE(lineNumber);
-      LED_OFF();
+    while (!correctLineReceived) {
+      nextLine = nextNeededLineNumber();
+      if (requestLine) {
+        // Combine fwVersion and needed line number
+        fwVersionAndLineNumber = (((uint32_t)firmwareVersion) << 16) | nextLine;
+        LED_ON();
+        // Query firmware line
+        TRANSMIT_GWAP_QUERY_LINE(fwVersionAndLineNumber);
+        LED_OFF();
+        failedLineRequests++;
+      }
+
       // Start timer
       timer.start(RESPONSE_TIMEOUT);
 
@@ -221,36 +140,112 @@ int main(void) {
         // Poll PKSTATUS and number of bytes in the Rx FIFO
         if ((status & 0x01) && bytes) {
           while (ReadSingleReg(PKTSTATUS) & 0x01);
-          LED_ON();
           // Packet received. Read packet and extract HEX line
-          if (readHexLine(lineNumber)) {
-            count = 0;  // Reset counter
-            break;
+          if (readHexLine()) {
+            failedLineRequests = 0;
+            // RF Packet OK: crc ok, function = status, product code ok, regId = firmware
+            // Extract firmware version
+            _fwVersion = getFwVersion(packet.data);
+            // Data payload
+            dataLine = packet.data + GWAP_DATA_HEAD_LEN;
+            dataLineLength = packet.length - GWAP_DATA_HEAD_LEN - 1;
+
+            // Correct data length?
+            if (dataLineLength > BYTES_PER_LINE) {
+              correctLineReceived = false;
+              requestLine = false;
+              break;
+            }
+
+            receivedLineNumber = getLineNumber(dataLine);
+
+            if (firstLine) {
+              // Skip line if it isn't the first one. Ask again line 0, with some probability
+              if (receivedLineNumber != 0) {
+                correctLineReceived = false;
+                if (random(0, 100) < 66) {
+                  requestLine = true;
+                } else requestLine = false;
+                break;
+              }
+              // Skip line if packet is not addressed to us
+              if (!gwap.isCCPACKETAddressedToMe(&packet)) {
+                correctLineReceived = false;
+                requestLine = true;
+                break;
+              }
+              // If everything is OK (first line received), track firmware version
+              firmwareVersion = _fwVersion;
+              correctLineReceived = true;
+              requestLine = false; // Tag along and try to use rows addressed to others
+              break;
+            } else {
+              // We already received a first line, so we know which firmware version we need (stored in firmwareVersion)
+              // Break if we received a packet with a wrong firmware version
+              if (_fwVersion != firmwareVersion) {
+                requestLine = true;
+                correctLineReceived = false;
+                break;
+              }
+              // If we need the line (it hasn't already been flashed)
+              if (!hasLineBeenFlashed(receivedLineNumber)) {
+                if (gwap.isCCPACKETAddressedToMe(&packet, true)) {
+                  // I'm a "Master" mote requesting lines, continue doing so
+                  correctLineReceived = true;
+                  requestLine = true;
+                  break;
+                } else {
+                  correctLineReceived = true;
+                  // Try to follow another master
+                  requestLine = false;
+                  failedLineRequests = MAX_FAILED_LINE_REQUESTS + 1; // Force a de-sync in order to elect another master
+                  break;
+                }
+              } else {
+                correctLineReceived = false;
+                break;
+              }
+            }
           }
-          LED_OFF();
         }
+      }
+
+      // After firstline has been received but no other line has come along, force a line request
+      if (nextLine > 0 && !correctLineReceived) {
+        // Request a line with some probability
+        if (random(0, 100) < 33) {
+          requestLine = true;
+        } else requestLine = false;
+        correctLineReceived = false;
+      }
+
+      // Introduce some delay in order to de-sync line requests with other motes
+      if (failedLineRequests >= MAX_FAILED_LINE_REQUESTS) {
+        delayClockCycles(random(10000L, 20000L));
+        failedLineRequests = 0;
       }
     }
 
-    lineReceived = false;
+    correctLineReceived = false;
+
+    dataLine += 4;
+    dataLineLength -= 4;
 
     // Is the line received OK?
-    if (checkCRC(ptrLine, lineLength)) {
-      if (TYPE_OF_RECORD(ptrLine) == RECTYPE_DATA) {
+    if (checkCRC(dataLine, dataLineLength)) {
+      if (TYPE_OF_RECORD(dataLine) == RECTYPE_DATA) {
         // Get target address
-        uint16_t addrFromHexFile = getTargetAddress(ptrLine);
+        uint16_t addrFromHexFile = getTargetAddress(dataLine);
 
         // Only for the first line received
         if (firstLine) {
           firstLine = false;
-
           // Is the starting address from the hex file different than our user flash address?
           if (addrFromHexFile != address) {
             // Jump to user code
-//            flashMorseString("jump addr from hex\n");
             jumpToUserCode();
-          } else  // Starting address is OK
-          {
+          } else {
+            // Starting address is OK
             LED_ON();
             // Erase user flash
             do {
@@ -268,38 +263,19 @@ int main(void) {
           row /= 0x10;
 
           for (i = 0; i < 16; i++) {
-            if (i < lineLength - 3)
-              isrTable[row][i] = ptrLine[i + 3];
+            if (i < dataLineLength - 3)
+              isrTable[row][i] = dataLine[i + 3];
             else
               isrTable[row][i] = 0xFF;
           }
         } else {
-          // Write line in flash
-          flash.write((uint8_t *) addrFromHexFile, ptrLine + 3, lineLength - 4);
-        }
-
-        lineNumber++;
-      } else  // Probably end of file
-      {
-        // Ask for line n+1 for a while (fake line)
-        lineNumber++;
-        i = 0;
-        while(i < 10) {
-          timer.start(RESPONSE_TIMEOUT);
           LED_ON();
-          TRANSMIT_GWAP_QUERY_LINE(lineNumber);
+          flash.write((uint8_t *) addrFromHexFile, dataLine + 3, dataLineLength - 4);
           LED_OFF();
-          // Wait timer timeout before asking again
-          while(!timer.timeout()) { ;; }
-          i++;
         }
-
-        // Write "flash ok" memory cell
-//        uint8_t data[1] = { 0x01 };
-//        flash.write((uint8_t *) NVOLAT_FACTORY_RESET_DONE, data, 1);
-
-        // Erase the vector table segment
-        flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+      } else  { // Probably end of file
+        // Ask for line n+1 for a while (fake line)
+        lastLineNumber = receivedLineNumber;
 
         // Replace their reset vector with our bootloader address
         // this allows the user to provide their own interrupt vectors
@@ -312,33 +288,39 @@ int main(void) {
         isrTable[3][0x0F] = 0x80;
 #endif
 
-        isrTable[3][0x0C] = 0x00;   // User code address = 0x9000
-        isrTable[3][0x0D] = 0x90;
-
-        // Write ISR table
-        for (i = 0; i < 8; i++) {
-          flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
-        }
-
-        // Jump to user code
-//        flashMorseString("jump last line\n");
-        jumpToUserCode();
+        isrTable[3][0x0C] = 0x00;   // User code address = 0xA000
+        isrTable[3][0x0D] = 0xA0;
       }
+
+      // Mark line as flashed
+      markLineAsFlashed(receivedLineNumber);
+    }
+
+    // Check if it's time to execute user code (flashing done)
+    if (nextNeededLineNumber() >= (lastLineNumber + 1)) {
+      // Erase the vector table segment
+      flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+      // Write ISR table
+      for (i = 0; i < 8; i++) {
+        flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
+      }
+      // Ask for line n+1 for a while (fake line)
+      fwVersionAndLineNumber = (((uint32_t)firmwareVersion) << 16) | lastLineNumber + 1;
+      for (i = 0; i < 10; i++) {
+        timer.start(RESPONSE_TIMEOUT);
+        LED_ON();
+        TRANSMIT_GWAP_QUERY_LINE(fwVersionAndLineNumber);
+        LED_OFF();
+        // Wait timer timeout before asking again
+        while(!timer.timeout());
+      }
+
+      jumpToUserCode();
     }
   }
-
-  // Enter restart mode
-  state = (uint8_t) SYSTATE_RESTART;
-  TRANSMIT_GWAP_STATUS_STATE(state);
-
-  return 0;
 }
 
-/**
- * initCore
- *
- * Initialize CC430 core
- */
+
 ALWAYS_INLINE
 void initCore(void) {
   // Configure PMM
@@ -395,33 +377,64 @@ void initCore(void) {
   RF1AIES = BIT0 | BIT9;
 }
 
-/**
- * getLineNumber
- *
- * Get number of line from payload
- *
- * @param data payload from packet received
- *
- * @return line number
- */
+// Return @true if the line has already been flashed
+ALWAYS_INLINE
+bool hasLineBeenFlashed(uint16_t lineNumber) {
+  uint16_t index = lineNumber / 8;
+  uint8_t mask = 1 << (lineNumber % 8);
+  return (receivedLines[index] & mask) != 0;
+}
+
+// Mark a line as already flashed
+ALWAYS_INLINE
+void markLineAsFlashed(uint16_t lineNumber) {
+  uint16_t index = lineNumber / 8;
+  uint8_t mask = 1 << (lineNumber % 8);
+  receivedLines[index] |= mask;
+}
+
+// Return the first not-already-written line number
+ALWAYS_INLINE
+uint16_t nextNeededLineNumber() {
+  uint16_t index, i;
+  uint8_t mask;
+
+  for (i = 0; i < MAX_SKETCH_LINES; i++) {
+    index = i / 8;
+    mask = 1 << (i % 8);
+    if ((receivedLines[index] & mask) == 0) return i;
+  }
+
+  // A fallback that should never be reached
+  return MAX_SKETCH_LINES;
+}
+
+ALWAYS_INLINE
+void factoryReset() {
+  CC430FLASH nvMem;
+
+  // Erase info memory
+  nvMem.eraseSegment((uint8_t *) INFOMEM_CONFIG);
+
+  for (int i = 0; i < 6; i++) {
+    LED_ON();
+    delayClockCycles(1000000L);
+    LED_OFF();
+    delayClockCycles(1000000L);
+  }
+
+  isVirgin = true;
+}
+
 ALWAYS_INLINE
 uint16_t getLineNumber(uint8_t *data) {
-  uint16_t lineNb = data[0];
+  uint16_t lineNb = data[2];
   lineNb <<= 8;
-  lineNb |= data[1];
+  lineNb |= data[3];
 
   return lineNb;
 }
 
-/**
- * getTargetAddress
- *
- * Get address from HEX line where the write has to be done
- *
- * @param line line from HEX file
- *
- * @return target address
- */
 ALWAYS_INLINE
 uint16_t getTargetAddress(uint8_t *line) {
 
@@ -432,17 +445,13 @@ uint16_t getTargetAddress(uint8_t *line) {
   return address;
 }
 
-/**
- * checkCRC
- *
- * Check CRC from hex line. The CRC byte (last byte) is a 2's complement
- * of the whole data buffer
- *
- * @param data payload from packet received
- * @param len packet length
- *
- * @return true if CRC is correct
- */
+ALWAYS_INLINE
+uint16_t getFwVersion(uint8_t *line) {
+  uint16_t version = ((uint16_t)line[GWAP_DATA_HEAD_LEN] << 8) | line[GWAP_DATA_HEAD_LEN + 1];
+
+  return version;
+}
+
 ALWAYS_INLINE
 bool checkCRC(uint8_t *data, uint8_t len) {
   uint8_t crc = len - 4;
@@ -459,11 +468,6 @@ bool checkCRC(uint8_t *data, uint8_t len) {
   return false;
 }
 
-/**
- * sleep
- *
- * Enter low-power mode
- */
 ALWAYS_INLINE
 void sleep(void) {
   // Power down radio
@@ -482,11 +486,6 @@ void sleep(void) {
   __bis_SR_register(LPM4_bits + GIE);
 }
 
-/**
- * jumpToUserCode
- *
- * Jump to user code after exiting GWAP upgrade mode
- */
 ALWAYS_INLINE
 void jumpToUserCode(void) {
   // Exit upgrade mode
@@ -504,13 +503,6 @@ void jumpToUserCode(void) {
 //  (*p)();                               // Call the function
 }
 
-/**
- * delayClockCycles
- *
- * Clock cycle delay
- *
- * @param n clock cycles to wait
- */
 ALWAYS_INLINE
 void delayClockCycles(register uint32_t n) {
   __asm__ __volatile__ (
@@ -518,4 +510,18 @@ void delayClockCycles(register uint32_t n) {
   " dec        %[n] \n"
   " jne        1b \n"
   :[n] "+r"(n));
+}
+
+ALWAYS_INLINE
+void ledBlink(uint8_t times) {
+  register uint32_t cycles = 200000000L;
+  uint8_t delayTimes = 2;
+
+  uint8_t i, j;
+  for (i = 0; i < times; i++) {
+    LED_ON();
+    for (j = 0; j < delayTimes; j++) delayClockCycles(cycles);
+    LED_OFF();
+    for (j = 0; j < delayTimes; j++) delayClockCycles(cycles);
+  }
 }

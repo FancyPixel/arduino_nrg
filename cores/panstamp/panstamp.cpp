@@ -296,7 +296,30 @@ void PANSTAMP::sleepSec(uint16_t time, RTCSRC source)
 
   // Sleep
   rtc.sleep(time, source);
-   
+  // Wake-up radio
+  radio.setRxState();
+}
+
+/**
+ * sleepMs
+ *
+ * put the MCU in sleep mode
+ *
+ * @param time Sleep time in milliseconds
+ * @param source Source of interruption (RTCSRC_VLO or RTCSRC_XT1)
+ */
+void PANSTAMP::sleepMs(uint32_t millisecs, RTCSRC source)
+{
+  if (millisecs == 0)
+    return;
+
+  // Power down radio
+  radio.setPowerDownState();
+
+  core.delayClockCycles(0xFFFF);
+
+  // Sleep
+  rtc.sleepMs(millisecs, source);
   // Wake-up radio
   radio.setRxState();
 }

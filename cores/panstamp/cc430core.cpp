@@ -41,7 +41,7 @@
  * @param lpm4 true if LPM4 has to be entered. Otherwise the MCU will
  * enter LPM3
  */
-void CC430CORE::setLowPowerMode(bool lpm4)
+void CC430CORE::setLowPowerMode(bool lpm4, uint32_t rtcTicks)
 {
   // Stop WDT
   disableWatchDog();
@@ -54,7 +54,7 @@ void CC430CORE::setLowPowerMode(bool lpm4)
   // Configure ports as binary I/O's
   P1SEL = 0;
   //P2SEL = 0;
-  
+
   #ifdef __NRG_VERSION_1_0__
   // Current hardware version (1.0) uses P3.6 to detect interrupts from
   // the on-board accelerometer. For this application, P3.6 is configured
@@ -67,7 +67,7 @@ void CC430CORE::setLowPowerMode(bool lpm4)
   #else
   P3DIR |= portSelection[2];
   #endif
-    
+
   // I2C lines remain high to not to sink current through
   // I2C pull-up resistors
   #ifdef __NRG_VERSION_1_1__
@@ -77,13 +77,29 @@ void CC430CORE::setLowPowerMode(bool lpm4)
   #else  // __NRG_VERSION_2
   P1OUT |= 0x18;
   #endif
- 
+
   // Configure ports working as alternative functions as outputs
   P1DIR |= portSelection[0];
   //P2DIR |= portSelection[1];
 
-  // Enter lowest power VCore level and MCLK = 1 MHz
-  _SET_VCORE_1MHZ(0);
+  if (rtcTicks > 0) {
+    // Initialize 32-bit counter
+    RTCNT4 = (rtcTicks >> 24) & 0xFF;
+    RTCNT3 = (rtcTicks >> 16) & 0xFF;
+    RTCNT2 = (rtcTicks >> 8) & 0xFF;
+    RTCNT1 = rtcTicks & 0xFF;
+
+    // Enable RTC interrupt
+    RTCCTL0 |= RTCTEVIE;
+    // Start RTC counter with 32-bit overflow
+    RTCCTL1 = 0x03;
+    // Enter low power VCore level and MCLK = 1 MHz
+    // IDK why, but if vCore is 0 stuff doesn't work correctly
+    _SET_VCORE_8MHZ(2);   // ~ 70 uA power consumption
+  } else {
+    // Enter lowest power VCore level and MCLK = 1 MHz
+    _SET_VCORE_1MHZ(0);
+  }
 
   // Turn off SVSH, SVSM
   PMMCTL0_H = 0xA5;

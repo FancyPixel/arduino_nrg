@@ -35,7 +35,7 @@ CC430RADIO::CC430RADIO(void)
  * 
  * Configure CC430 radio registers
  */
-void CC430RADIO::setCCregs(void)
+void CC430RADIO::setCCregs(void) 
 {
   WriteSingleReg(IOCFG2, CCDEF_IOCFG2);
   WriteSingleReg(IOCFG0,  CCDEF_IOCFG0);
@@ -54,7 +54,7 @@ void CC430RADIO::setCCregs(void)
   setChannel(channel);
 
   WriteSingleReg(FSCTRL1,  CCDEF_FSCTRL1);
-  WriteSingleReg(FSCTRL0,  CCDEF_FSCTRL0);
+  WriteSingleReg(FSCTRL0,  CCDEF_FSCTRL0);    
 
   // Set default carrier frequency = 868 MHz
   setCarrierFreq(carrierFreq);
@@ -91,9 +91,9 @@ void CC430RADIO::setCCregs(void)
 
 /**
  * sendData
- *
+ * 
  * Send data packet via RF
- *
+ * 
  * @param packet Packet to be transmitted. First byte is the destination address
  *
  * @return True if the transmission succeeds. False otherwise
@@ -183,20 +183,22 @@ uint8_t CC430RADIO::receiveData(CCPACKET *packet)
   uint8_t rxLength = ReadSingleReg(RXBYTES);
 
   // Any byte waiting to be read and no overflow?
-  if ((rxLength & 0x7F) && !(rxLength & 0x80))
-  {
+  if ((rxLength & 0x7F) && !(rxLength & 0x80)) {
     // If packet is too long
-    if (rxLength > CCPACKET_BUFFER_LEN)
-      packet->length = 0;   // Discard packet
-    else
-    {
+    if (rxLength > CCPACKET_BUFFER_LEN) {
+      // Discard packet
+      packet->length = 0;
+    } else {
       // Read data packet
       ReadBurstReg(RF_RXFIFORD, rxBuffer, rxLength);
 
+      // Read packet length
       packet->length = rxBuffer[0];
 
-      for(i=0 ; i<packet->length; i++)
-        packet->data[i] = rxBuffer[i+1];
+      // Extract data
+      for(i = 0; i < packet->length; i++) {
+        packet->data[i] = rxBuffer[i + 1];
+      }
 
       // Read RSSI
       packet->rssi = rxBuffer[++i];
@@ -204,9 +206,9 @@ uint8_t CC430RADIO::receiveData(CCPACKET *packet)
       packet->lqi = rxBuffer[++i] & 0x7F;
       packet->crc_ok = rxBuffer[i] >> 7;
     }
-  }
-  else
+  } else {
     packet->length = 0;
+  }
 
   setIdleState();       // Enter IDLE state
   flushRxFifo();        // Flush Rx FIFO

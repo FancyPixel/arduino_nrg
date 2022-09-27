@@ -88,7 +88,7 @@ CC430RTC::CC430RTC(void)
  * @param time Sleeping time in seconds
  * @param ACLK source (RTCSRC_XT1 or RTCSRC_VLO)
  */
-void CC430RTC::sleep(uint16_t time, RTCSRC source) 
+void CC430RTC::sleep(uint16_t time, RTCSRC source)
 {
   if (time == 0)
     return;
@@ -116,6 +116,50 @@ void CC430RTC::sleep(uint16_t time, RTCSRC source)
   RTC_START_32BIT_COUNTER();          // Start RTC counter with 32-bit overflow
 
   panstamp.core.setLowPowerMode();    // Enter low-power mode (LPM3)
+
+  // ZZZZZZZ....
+
+  panstamp.core.setNormalMode();      // Exit low-power mode and enable WDT
+}
+
+/**
+ * sleepMs
+ *
+ *  MAX time is 65536 milliseconds
+ *
+ * Put panStamp into Power-down state during "time".
+ * This function uses RTC connected to an external 32.768KHz crystal
+ * in order to exit (interrupt) from the power-down state
+ *
+ * @param time Sleeping time in milliseconds. MAX time is 4294967296 milliseconds
+ * @param ACLK source (RTCSRC_XT1 (default) or RTCSRC_VLO)
+ */
+void CC430RTC::sleepMs(uint32_t millisecs, RTCSRC source) {
+  if (millisecs == 0)
+    return;
+
+  uint32_t ticks = 0xFFFFFFFF;
+
+  switch(source) {
+    case RTCSRC_XT1:
+      RTC_SET_ACLK_XT1();   // Connect ACLK to 32.768 KHz crystal
+      ticks -= (RTC_32K_CYCLES_1SEC * millisecs) / 1000;
+      break;
+    case RTCSRC_VLO:
+      RTC_SET_ACLK_VLO();   // Connect ACLK to VLO (Internal 10KHz oscillator)
+      ticks -= (RTC_VLO_CYCLES_1SEC * millisecs) / 1000;
+      break;
+    default:
+      break;
+  }
+
+  disableWatchDog();                  // Stop WDT
+
+//  RTC_SET_TICKS(ticks);               // Initialize 32-bit counter
+//  RTC_ISR_ENABLE();                   // Enable RTC interrupt
+//  RTC_START_32BIT_COUNTER();          // Start RTC counter with 32-bit overflow
+//  panstamp.core.setLowPowerMode();    // Enter low-power mode (LPM3)
+  panstamp.core.setLowPowerMode(false, ticks); // Enter low-power mode (LPM3)
 
   // ZZZZZZZ....
 

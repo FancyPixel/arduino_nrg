@@ -107,7 +107,7 @@ class CC430CORE
      * @param lpm4 true if LPM4 has to be entered. Otherwise the MCU will
      * enter LPM3
      */
-    void setLowPowerMode(bool lpm4 = false);
+    void setLowPowerMode(bool lpm4 = false, uint32_t rtcTicks = 0);
 
     /**
      * setNormalMode

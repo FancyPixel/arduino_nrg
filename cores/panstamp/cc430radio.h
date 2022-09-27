@@ -42,6 +42,7 @@
 enum CFREQ
 {
   CFREQ_868 = 0,
+  CFREQ_869_8,
   CFREQ_915,
   CFREQ_918,
   CFREQ_433,
@@ -76,6 +77,13 @@ enum RFSTATE
 #define CCDEF_SYNC0      0x47   // Synchronization word, low byte
 #define CCDEF_FSCTRL1    0x08   // Frequency synthesizer control.
 #define CCDEF_FSCTRL0    0x00   // Frequency synthesizer control.
+// Carrier frequency = 869.8 MHz
+//#define CCDEF_FREQ2_868  0x21   // Frequency control word, high byte.
+//#define CCDEF_FREQ1_868  0x74   // Frequency control word, middle byte.
+//#define CCDEF_FREQ0_868  0x2F   // Frequency control word, low byte.
+#define CCDEF_FREQ2_869_8  0x21   // Frequency control word, high byte.
+#define CCDEF_FREQ1_869_8  0x74   // Frequency control word, middle byte.
+#define CCDEF_FREQ0_869_8  0x2F   // Frequency control word, low byte.
 // Carrier frequency = 868 MHz
 #define CCDEF_FREQ2_868  0x21   // Frequency control word, high byte.
 #define CCDEF_FREQ1_868  0x62   // Frequency control word, middle byte.

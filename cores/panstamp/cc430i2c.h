@@ -31,12 +31,12 @@
 
 class CC430I2C
 {
-public:
+  public:
     /**
      * Slave address
      */
     uint16_t slaveAddress;
-
+  
     /**
      * begin
      * 
