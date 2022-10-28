@@ -386,9 +386,9 @@ bool CC430RADIO::sendData(CCPACKET packet)
     if (marcState == 0x11)        // RX_OVERFLOW
       flushRxFifo();              // flush receive queue
   }
- 
+
   delayMicroseconds(500);
-  
+
   // Set data length at the first position of the TX FIFO
   WriteSingleReg(RF_TXFIFOWR,  packet.length);
   // Write data into the TX FIFO
@@ -415,15 +415,15 @@ bool CC430RADIO::sendData(CCPACKET packet)
   // Wait until packet transmission
   while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
 
-  if (!count)
-  {
+  if (count <= 0) {
     setIdleState();       // Enter IDLE state
     flushTxFifo();        // Flush Tx FIFO
     res = false;
   }
   // Check that the TX FIFO is empty
-  else if((ReadSingleReg(TXBYTES) & 0x7F) == 0)
+  else if ((ReadSingleReg(TXBYTES) & 0x7F) == 0) {
     res = true;
+  }
 
   // Clear interrupt flags
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
