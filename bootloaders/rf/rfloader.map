@@ -1231,23 +1231,23 @@ LOAD /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/b
  .debug_frame   0x000000000000024a       0x2c /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
  .debug_frame   0x0000000000000276       0x3c /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(rand.o)
 
-.debug_str      0x0000000000000000     0x1148
+.debug_str      0x0000000000000000     0x1141
  *(.debug_str)
- .debug_str     0x0000000000000000      0xdd1 rfloader.o
-                                        0xee9 (size before relaxing)
- .debug_str     0x0000000000000dd1       0x74 cc430radio.o
-                                        0x496 (size before relaxing)
- .debug_str     0x0000000000000e45      0x19c rf1a.o
-                                        0x2c4 (size before relaxing)
- .debug_str     0x0000000000000fe1       0x70 pmm.o
-                                        0x175 (size before relaxing)
- .debug_str     0x0000000000001051       0x16 gwap.o
-                                        0x785 (size before relaxing)
- .debug_str     0x0000000000001067       0x85 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcmp.o)
+ .debug_str     0x0000000000000000      0xdca rfloader.o
+                                        0xee2 (size before relaxing)
+ .debug_str     0x0000000000000dca       0x74 cc430radio.o
+                                        0x48f (size before relaxing)
+ .debug_str     0x0000000000000e3e      0x19c rf1a.o
+                                        0x2bd (size before relaxing)
+ .debug_str     0x0000000000000fda       0x70 pmm.o
+                                        0x16e (size before relaxing)
+ .debug_str     0x000000000000104a       0x16 gwap.o
+                                        0x77e (size before relaxing)
+ .debug_str     0x0000000000001060       0x85 /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcmp.o)
                                         0x104 (size before relaxing)
- .debug_str     0x00000000000010ec       0x2d /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
+ .debug_str     0x00000000000010e5       0x2d /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(memcpy.o)
                                         0x11f (size before relaxing)
- .debug_str     0x0000000000001119       0x2f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(rand.o)
+ .debug_str     0x0000000000001112       0x2f /Users/ale/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/../lib/gcc/msp430/4.6.3/../../../../msp430/lib/mcpu-430x/mmpy-16/libc.a(rand.o)
                                         0x118 (size before relaxing)
 
 .debug_loc      0x0000000000000000     0x101d
