@@ -9479,7 +9479,7 @@ void ResetRadioCore(void)
     31f8:	32 31       	jn	$+614    	;abs 0x345e
     31fa:	2e 31       	jn	$+606    	;abs 0x3458
     31fc:	00 01       	bra	@r1		
-    31fe:	80 00       	Address 0x00000000000031fe is out of bounds.
+    31fe:	80 ff       	Address 0x00000000000031fe is out of bounds.
 Address 0x0000000000003200 is out of bounds.
 and.b	@r15+,	-1(r15)	;0xffff(r15)
 

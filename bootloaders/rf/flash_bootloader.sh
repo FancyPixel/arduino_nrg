@@ -42,7 +42,7 @@ cp ${PRODUCT_TYPES_PATH}/${MOTE_TYPE}.h ${SCRIPT_PATH}/product.h
 export SERPORT=${SERIAL_PORT}
 
 last_made_for=$(cat $LAST_MADE_FOR_PATH)
-if [ "$last_made_for" != $"MOTE_TYPE" ]
+if [ "$last_made_for" != "$MOTE_TYPE" ]
 then
   make clean
   make
