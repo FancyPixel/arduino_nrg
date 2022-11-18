@@ -237,6 +237,11 @@ void CC430RADIO::setCarrierFreq(uint8_t freq)
       WriteSingleReg(FREQ1,  CCDEF_FREQ1_433);
       WriteSingleReg(FREQ0,  CCDEF_FREQ0_433);
       break;
+    case CFREQ_869_8:
+      WriteSingleReg(FREQ2,  CCDEF_FREQ2_869_8);
+      WriteSingleReg(FREQ1,  CCDEF_FREQ1_869_8);
+      WriteSingleReg(FREQ0,  CCDEF_FREQ0_869_8);
+      break;
     default:
       WriteSingleReg(FREQ2,  CCDEF_FREQ2_868);
       WriteSingleReg(FREQ1,  CCDEF_FREQ1_868);
@@ -381,9 +386,9 @@ bool CC430RADIO::sendData(CCPACKET packet)
     if (marcState == 0x11)        // RX_OVERFLOW
       flushRxFifo();              // flush receive queue
   }
- 
+
   delayMicroseconds(500);
-  
+
   // Set data length at the first position of the TX FIFO
   WriteSingleReg(RF_TXFIFOWR,  packet.length);
   // Write data into the TX FIFO
@@ -410,15 +415,15 @@ bool CC430RADIO::sendData(CCPACKET packet)
   // Wait until packet transmission
   while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
 
-  if (!count)
-  {
+  if (count <= 0) {
     setIdleState();       // Enter IDLE state
     flushTxFifo();        // Flush Tx FIFO
     res = false;
   }
   // Check that the TX FIFO is empty
-  else if((ReadSingleReg(TXBYTES) & 0x7F) == 0)
+  else if ((ReadSingleReg(TXBYTES) & 0x7F) == 0) {
     res = true;
+  }
 
   // Clear interrupt flags
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
@@ -461,11 +466,17 @@ uint8_t CC430RADIO::receiveData(CCPACKET *packet)
 
       packet->length = rxBuffer[0];
 
-      for(i=0 ; i<packet->length; i++)
+      for(i = 0; i < packet->length; i++) {
         packet->data[i] = rxBuffer[i+1];
+      }
 
       // Read RSSI
       packet->rssi = rxBuffer[++i];
+      if (packet->rssi >= 128) {
+        packet->rssi_dbm = ((((int16_t)packet->rssi) - 256) / 2) - RSSI_OFFSET;
+      } else {
+        packet->rssi_dbm = (((int16_t)packet->rssi) / 2) - RSSI_OFFSET;
+      }
       // Read LQI and CRC_OK
       packet->lqi = rxBuffer[++i] & 0x7F;
       packet->crc_ok = rxBuffer[i] >> 7;

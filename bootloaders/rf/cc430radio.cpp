@@ -26,7 +26,8 @@ CC430RADIO::CC430RADIO(void)
   syncWord[0] = CCDEF_SYNC0;
   syncWord[1] = CCDEF_SYNC1;
   devAddress = CCDEF_ADDR;
-  paTableByte = PA_LowPower;            // Priority = Low power
+  paTableByte = PA_LongDistance;            // Priority = Long distance
+//  paTableByte = PA_LowPower;            // Priority = Low power
 }
 
 /**
@@ -58,7 +59,12 @@ void CC430RADIO::setCCregs(void)
   // Set default carrier frequency = 868 MHz
   setCarrierFreq(carrierFreq);
 
-  WriteSingleReg(MDMCFG4,  CCDEF_MDMCFG4);
+  // RF speed
+  if (workMode == MODE_4800)
+    WriteSingleReg(MDMCFG4,  CCDEF_MDMCFG4_4800);
+  else
+    WriteSingleReg(MDMCFG4,  CCDEF_MDMCFG4_38400);
+
   WriteSingleReg(MDMCFG3,  CCDEF_MDMCFG3);
   WriteSingleReg(MDMCFG2,  CCDEF_MDMCFG2);
   WriteSingleReg(MDMCFG1,  CCDEF_MDMCFG1);
@@ -79,6 +85,8 @@ void CC430RADIO::setCCregs(void)
   WriteSingleReg(FSTEST,  CCDEF_FSTEST);
   WriteSingleReg(TEST1,  CCDEF_TEST1);
   WriteSingleReg(TEST0,  CCDEF_TEST0);
+
+  enableCCA();
 }
 
 /**
@@ -92,30 +100,67 @@ void CC430RADIO::setCCregs(void)
  */
 bool CC430RADIO::sendData(CCPACKET packet)
 {
-  bool res = true;
+  bool res = false;
+  uint8_t marcState;
+  uint16_t count;
 
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
-  MRFI_ENABLE_SYNC_PIN_INT();
+  MRFI_CLEAR_GDO0_INT_FLAG();
 
-  // Disable Rx
+  // Disable Rx and enter in IDLE state
   setRxOffState();
+
+  // Enter RX state again
+  setRxState();
+
+  // Check that the RX state has been entered
+  while (((marcState = ReadSingleReg(MARCSTATE)) & 0x1F) != 0x0D)
+  {
+    if (marcState == 0x11)        // RX_OVERFLOW
+      flushRxFifo();              // flush receive queue
+  }
+
+  delayMicroseconds(500);
 
   // Set data length at the first position of the TX FIFO
   WriteSingleReg(RF_TXFIFOWR,  packet.length);
   // Write data into the TX FIFO
   WriteBurstReg(RF_TXFIFOWR, packet.data, packet.length);
 
+  MRFI_CLEAR_GDO0_INT_FLAG();
+
   // Transmit
   setTxState();
 
-  // Wait for transmision to complete
-  while(!MRFI_SYNC_PIN_INT_FLAG_IS_SET());
-  
-  // Clear interrupt flag
+  // Check that TX state is being entered (state = RXTX_SETTLING)
+  marcState = ReadSingleReg(MARCSTATE) & 0x1F;
+  if((marcState != 0x13) && (marcState != 0x14) && (marcState != 0x15))
+  {
+    setIdleState();       // Enter IDLE state
+    flushTxFifo();        // Flush Tx FIFO
+    setRxState();         // Back to RX state
+    return false;
+  }
+
+  delayMicroseconds(250);
+  count = 0xFFFF;
+  // Wait until packet transmission
+  while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
+
+  if (!count)
+  {
+    setIdleState();       // Enter IDLE state
+    flushTxFifo();        // Flush Tx FIFO
+    res = false;
+  }
+    // Check that the TX FIFO is empty
+  else if((ReadSingleReg(TXBYTES) & 0x7F) == 0)
+    res = true;
+
+  // Clear interrupt flags
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
-  
-  MRFI_DISABLE_SYNC_PIN_INT();
-  
+  MRFI_CLEAR_GDO0_INT_FLAG();
+
   // Enter back into RX state
   setRxOnState();
 
@@ -138,20 +183,22 @@ uint8_t CC430RADIO::receiveData(CCPACKET *packet)
   uint8_t rxLength = ReadSingleReg(RXBYTES);
 
   // Any byte waiting to be read and no overflow?
-  if ((rxLength & 0x7F) && !(rxLength & 0x80))
-  {
+  if ((rxLength & 0x7F) && !(rxLength & 0x80)) {
     // If packet is too long
-    if (rxLength > CCPACKET_BUFFER_LEN)
-      packet->length = 0;   // Discard packet
-    else
-    {
+    if (rxLength > CCPACKET_BUFFER_LEN) {
+      // Discard packet
+      packet->length = 0;
+    } else {
       // Read data packet
       ReadBurstReg(RF_RXFIFORD, rxBuffer, rxLength);
 
+      // Read packet length
       packet->length = rxBuffer[0];
 
-      for(i=0 ; i<packet->length; i++)
-        packet->data[i] = rxBuffer[i+1];
+      // Extract data
+      for(i = 0; i < packet->length; i++) {
+        packet->data[i] = rxBuffer[i + 1];
+      }
 
       // Read RSSI
       packet->rssi = rxBuffer[++i];
@@ -159,9 +206,9 @@ uint8_t CC430RADIO::receiveData(CCPACKET *packet)
       packet->lqi = rxBuffer[++i] & 0x7F;
       packet->crc_ok = rxBuffer[i] >> 7;
     }
-  }
-  else
+  } else {
     packet->length = 0;
+  }
 
   setIdleState();       // Enter IDLE state
   flushRxFifo();        // Flush Rx FIFO

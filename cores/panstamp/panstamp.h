@@ -179,6 +179,16 @@ class PANSTAMP
     void sleepSec(uint16_t time, RTCSRC source=RTCSRC_XT1);
 
     /**
+     * sleepMs
+     *
+     * put the MCU in sleep mode
+     *
+     * @param time Sleep time in milliseconds
+     * @param source Source of interruption (RTCSRC_VLO or RTCSRC_XT1)
+     */
+    void sleepMs(uint32_t millisecs, RTCSRC source = RTCSRC_XT1);
+
+    /**
      * attachInterrupt
      * 
      * Declare custom ISR, to be called whenever a wireless packet is received

@@ -38,6 +38,8 @@ uint8_t TwoWire::txBuffer[BUFFER_LENGTH];
 uint8_t TwoWire::txBufferIndex = 0;
 uint8_t TwoWire::txBufferLength = 0;
 
+uint32_t TwoWire::clock = DEFAULT_I2C_CLOCK_FREQ;
+
 void (*TwoWire::user_onRequest)(void);
 void (*TwoWire::user_onReceive)(int);
 
@@ -121,7 +123,7 @@ void TwoWire::beginTransmission(uint8_t address)
   rxBufferIndex = 0;
   rxBufferLength = 0;
   
-  i2cPort.beginTransmission((uint16_t)address);
+  i2cPort.beginTransmission((uint16_t)address, clock);
 }
 
 void TwoWire::beginTransmission(int address)
@@ -152,6 +154,12 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop)
  
   return ret;
 }
+
+
+void TwoWire::setClock(uint32_t clockFreq) {
+  clock = clockFreq;
+}
+
 
 /**
  * write

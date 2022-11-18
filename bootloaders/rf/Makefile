@@ -1,19 +1,12 @@
 
 # Configure serial port and path to the toolchain, acording to your settings
-SERPORT = /dev/tty.usbserial-A50285BI
-# SERPORT = /dev/tty.usbserial
-# SERPORT = /dev/tty.usbserial-DA013RBN
+SERPORT ?= /dev/tty.usbserial-DA013RBN
 ARDUINO_ROOT = ~/Library/Arduino15
 TOOLCHAIN = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/msp430-
 JAVA_BSL = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/java-bsl/1.0.0/BsLoader.jar
 
 MCU = cc430f5137
-<<<<<<< Updated upstream
-# SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp swap.cpp
-SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp utils.cpp
-=======
 SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp functions.cpp # utils.cpp
->>>>>>> Stashed changes
 
 IDIR = -I../../../../tools/msp430/msp430/include
 
@@ -37,7 +30,7 @@ LD = $(CC)
 PROG := $(firstword $(SRCS:.cpp=))
 OBJS := $(SRCS:.cpp=.o)
 
-all: $(PROG).elf $(PROG).hex $(PROG).lst
+all: $(PROG).elf $(PROG).hex $(PROG).lst info
 
 %.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $(PROG).elf $(OBJS)
@@ -63,8 +56,6 @@ bsl-flash:
 
 upload:
 	java -jar $(JAVA_BSL) /var/folders/8s/6k3r4rt57r38rl8r4ngd6j780000gn/T/arduino_build_414041/ntc.ino.hex $(SERPORT) --verif-off --verbose-on
-<<<<<<< Updated upstream
-=======
 
 info:
 	@echo "********                                 ********"
@@ -89,4 +80,3 @@ info:
 	@echo "******** READY TO COPY PREPARED FOR YOU! ********"
 	@echo "********                                 ********"
 	@./post_compile.rb
->>>>>>> Stashed changes

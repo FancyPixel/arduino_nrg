@@ -31,6 +31,7 @@
  */
 #define CCPACKET_BUFFER_LEN        64
 #define CCPACKET_DATA_LEN          CCPACKET_BUFFER_LEN - 3
+#define RSSI_OFFSET                74 //dBm - This depends on frequency and data baud rate. See TI Applic. note swra114d.pdf
 
 /**
  * Class: CCPACKET
@@ -59,12 +60,14 @@ struct CCPACKET
     /**
      * Received Strength Signal Indication
      */
-    int8_t/*uint8_t*/ rssi;
+    int8_t rssi;
+
+    int16_t rssi_dbm;
 
     /**
      * Link Quality Index
      */
-    uint8_t lqi;
+    int8_t lqi;
 };
 
 #endif

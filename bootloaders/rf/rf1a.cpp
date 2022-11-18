@@ -123,7 +123,6 @@ unsigned char ReadSingleReg(unsigned char addr)
 // *************************************************************************************************
 void WriteSingleReg(unsigned char addr, unsigned char value)
 { 
-	volatile unsigned int i;
 	unsigned int int_state;
 
 	ENTER_CRITICAL_SECTION(int_state);
@@ -132,8 +131,6 @@ void WriteSingleReg(unsigned char addr, unsigned char value)
     
     RF1AINSTRW = ((addr | RF_REGWR)<<8 ) + value; // Send address + Instruction
 	while (!(RFDINIFG & RF1AIFCTL1));
-
-	i = RF1ADOUTB;                            // Reset RFDOUTIFG flag which contains status byte
 
 	EXIT_CRITICAL_SECTION(int_state);
 }

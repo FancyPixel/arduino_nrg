@@ -35,6 +35,7 @@
 #include "cc430i2c.h"
 
 #define BUFFER_LENGTH 32
+#define DEFAULT_I2C_CLOCK_FREQ 100000UL
 
 class TwoWire : public Stream
 {
@@ -51,7 +52,9 @@ class TwoWire : public Stream
     static void (*user_onReceive)(int);
     static void onRequestService(void);
     static void onReceiveService(uint8_t*, int);
-    
+
+    static uint32_t clock;
+
     CC430I2C i2cPort;
     
   public:
@@ -112,7 +115,10 @@ class TwoWire : public Stream
      */
     uint8_t requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop=true);    
     uint8_t requestFrom(int, int, int);
-    
+
+
+    void setClock(uint32_t);
+
     /**
      * write
      * 

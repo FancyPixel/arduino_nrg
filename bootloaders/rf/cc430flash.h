@@ -4,6 +4,21 @@
 #include <cc430f5137.h>
 #include "datatypes.h"
 
+
+/**
+ * EEPROM/Infomem addresses
+ */
+#define NVOLAT_SIGNATURE          0x00   // 2-byte register
+#define NVOLAT_FREQ_CHANNEL       0x02   // 1-byte register
+#define NVOLAT_SYNC_WORD          0x03   // 2-byte register
+#define NVOLAT_TX_INTERVAL        0x05   // 2-byte register
+#define NVOLAT_FIRST_CUSTOM       0x20
+
+// Signature
+#define NVOLAT_SIGNATURE_HIGH     0xAB
+#define NVOLAT_SIGNATURE_LOW      0xCD
+
+
 class CC430FLASH
 {
   private:

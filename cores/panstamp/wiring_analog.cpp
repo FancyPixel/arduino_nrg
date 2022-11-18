@@ -29,10 +29,12 @@
 uint16_t analogPeriod = SYSTEM_CLK_FREQ/490;
 uint16_t analogRes = 255;
 uint16_t analogRef = ADCREF_VCC;
+uint32_t analog_div;
 
 //Arduino specifies ~490 Hz for analog out PWM so we follow suit.
 #define PWM_PERIOD analogPeriod // SYSTEM_CLK_FREQ/490
 #define PWM_DUTY(x) ( (unsigned long)x*PWM_PERIOD / (unsigned long)analogRes )
+//#define PWM_DUTY(x) ( (uint32_t)x * analogPeriod / (uint32_t)analogRes )
 
 // Calibration data
 #define CALIB_ADC_GAIN      *((uint16_t *)0x1A16)
@@ -249,7 +251,7 @@ void analogWrite(uint8_t pin, uint16_t val)
         digitalWrite(pin, HIGH);
       }
       else
-        TA0CTL = TASSEL_2 + MC_1 + TACLR;     // SMCLK, up mode, clear TAR
+        TA0CTL = TASSEL_2 + MC_1 + analog_div;     // SMCLK, up mode, clear TAR
     }
     else
     {
@@ -259,19 +261,57 @@ void analogWrite(uint8_t pin, uint16_t val)
         digitalWrite(pin, HIGH);
       }
       else
-        TA1CTL = TASSEL_2 + MC_1 + TACLR;     // SMCLK, up mode, clear TAR
+        TA1CTL = TASSEL_2 + MC_1 + analog_div;     // SMCLK, up mode, clear TAR
     }
   }
 }
 
 /**
- * analogFrequency
+ * Stop PWM on given pin
+ *
+ * @param pin pin number
+ */
+void stopAnalogWrite(uint8_t pin) {
+  uint8_t timer = digitalPinToTimer(pin);
+
+  if (timer < T1A1) TA0CTL = MC_0;
+  else TA1CTL = MC_0;
+}
+
+
+/**
+ * setAnalogFrequency
  *
  * set PWM period
  *
  * @param freq PWM frequency
  */
-void analogFrequency(uint16_t freq)
+
+void setAnalogFrequency(uint16_t freq)
 {
-  analogPeriod = SYSTEM_CLK_FREQ/freq;
+  if ( freq <= SYSTEM_CLK_FREQ/(8*65334L) ) {
+    return;  // Out of luck, sorry pal.
+  }
+
+  if ( freq <= SYSTEM_CLK_FREQ/(4*65334L) ) {
+    analog_div = ID_3;
+    freq *= 8;
+  } else if ( freq <= SYSTEM_CLK_FREQ/(2*65334L) ) {
+    analog_div = ID_2;
+    freq *= 4;
+  } else if ( freq <= SYSTEM_CLK_FREQ/(1*65334L) ) {
+    analog_div = ID_1;
+    freq *= 2;
+  } else {
+    analog_div = ID_0;
+  }
+  analogPeriod = SYSTEM_CLK_FREQ / freq;
+}
+
+//void setAnalogFrequency(uint16_t freq) {
+//  analogPeriod = SYSTEM_CLK_FREQ / freq;
+//}
+
+uint16_t getAnalogPeriod() {
+  return analogPeriod;
 }

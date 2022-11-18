@@ -66,7 +66,7 @@ volatile uint16_t vlo_freq = 0;
 void enableWatchDogIntervalMode(void);
 
 /**
- * First routime being called!
+ * First routine being called!
  */
 void init(void)
 {

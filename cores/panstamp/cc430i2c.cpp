@@ -50,12 +50,14 @@ void CC430I2C::begin(void)
  *
  * @param slaAddr I2C slave address
  */
-void CC430I2C::beginTransmission(uint16_t slaAddr) 
+void CC430I2C::beginTransmission(uint16_t slaAddr, uint32_t clock)
 {
+  uint32_t clkDiv = SYSTEM_CLK_FREQ / clock;
+
   UCB0CTL1 |= UCSWRST;                    // Enable SW reset
   UCB0CTL0 = UCMST + UCMODE_3 + UCSYNC;   // I2C Master, synchronous mode
   UCB0CTL1 = UCSSEL_2 + UCSWRST;          // Use SMCLK
-  UCB0BR0 = 120;                          // fSCL = SMCLK/120 = ~100kHz
+  UCB0BR0 = clkDiv;                       // fSCL = SMCLK/120 = ~100kHz
   UCB0BR1 = 0;
   UCB0I2CSA = slaAddr;                    // Slave Address
   UCB0CTL1 &= ~UCSWRST;                   // Clear SW reset, resume operation

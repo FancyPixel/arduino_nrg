@@ -1,7 +1,6 @@
 #include "gwap.h"
 
-
-void GWAP::sendPacket(uint8_t funct, uint8_t regId, uint8_t *val, uint8_t len) {
+bool GWAP::sendPacket(uint8_t funct, uint8_t regId, uint8_t *val, uint8_t len) {
   uint8_t i;
   CCPACKET packet;
   static uint8_t nonce = 0;
@@ -22,20 +21,11 @@ void GWAP::sendPacket(uint8_t funct, uint8_t regId, uint8_t *val, uint8_t len) {
     packet.data[GWAP_DATA_HEAD_LEN + i] = val[i];
   }
 
-  uint8_t goodCrc = 0;
-
   for (i = 0; i < packet.length - 1; i++) {
     tmpCrc += packet.data[i];
   }
 
   packet.data[GWAP_DATA_HEAD_LEN + len] = tmpCrc;
 
-//  for (int i = 0; i < packet.length; i++) {
-//    flashMorseString(packet.data[i]);
-//    flashMorseString(",");
-//  }
-//
-//  flashMorseString("\n\n");
-
-  radio.sendData(packet);
+  return radio.sendData(packet);
 }
