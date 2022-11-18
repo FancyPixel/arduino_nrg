@@ -1,5 +1,7 @@
 #include "rfloader.h"
+#include "functions.h"
 
+<<<<<<< Updated upstream
 // Responses from server have to be received before 10000 ms after sending
 // the query
 #define RESPONSE_TIMEOUT 200
@@ -61,6 +63,17 @@ bool readHexLine(uint16_t lineNumber) {
   }
   return false;
 }
+=======
+//#define WORKING_MODE MODE_4800
+#define WORKING_MODE MODE_38400
+
+extern GWAP gwap;
+// Global packet
+extern CCPACKET packet;
+extern bool isVirgin;
+extern uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
+
+>>>>>>> Stashed changes
 
 /**
  * main
@@ -87,7 +100,7 @@ int main(void) {
 
 //  flashMorseString("start\n");
 
-  // This flag will tell us whether wireless bootloading needs to start or not
+  // This flag will tell us whether wireless bootloader needs to start or not
   bool *ptr1;
   ptr1 = (bool *) RAM_END_ADDRESS;  // Memory address at the end of the stack
   bool runUserCode = *ptr1;       // Read value
@@ -130,7 +143,7 @@ int main(void) {
   TRANSMIT_GWAP_STATUS_STATE(state);
 
   // Pointer at the begining of user flash
-  uint16_t address = USER_ROMADDR;
+  uint16_t userRomStartingAddress = USER_CODE_STARTING_ADDR;
 
   while (1) {
     // Wait for new line from server
@@ -183,9 +196,14 @@ int main(void) {
         // Only for the first line received
         if (firstLine) {
           firstLine = false;
+<<<<<<< Updated upstream
 
           // Is the starting address from the hex file different than our user flash address?
           if (addrFromHexFile != address) {
+=======
+          // Is the starting address from the hex file equal to our user flash starting address?
+          if (addrFromHexFile != userRomStartingAddress) {
+>>>>>>> Stashed changes
             // Jump to user code
 //            flashMorseString("jump addr from hex\n");
             jumpToUserCode();
@@ -193,10 +211,10 @@ int main(void) {
           {
             LED_ON();
             // Erase user flash
-            do {
-              flash.eraseSegment((uint8_t *) address);
-              address += 512;
-            } while (address < USER_END_ROMADDR);
+            while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
+              flash.eraseSegment((uint8_t *) userRomStartingAddress);
+              userRomStartingAddress += FLASH_SEGMENT_SIZE;
+            }
 
             LED_OFF();
           }
@@ -207,6 +225,9 @@ int main(void) {
           uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
           row /= 0x10;
 
+//          for (i = 0; i < 16; i++) {
+//            isrTable[row][i] = dataLine[i];
+//          }
           for (i = 0; i < 16; i++) {
             if (i < lineLength - 3)
               isrTable[row][i] = ptrLine[i + 3];
@@ -217,6 +238,7 @@ int main(void) {
           // Write line in flash
           flash.write((uint8_t *) addrFromHexFile, ptrLine + 3, lineLength - 4);
         }
+<<<<<<< Updated upstream
 
         lineNumber++;
       } else  // Probably end of file
@@ -224,6 +246,10 @@ int main(void) {
 
         // Erase the vector table segment
         flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+=======
+      } else  { // Probably end of file
+        lastLineNumber = receivedLineNumber;
+>>>>>>> Stashed changes
 
         // Replace their reset vector with our bootloader address
         // this allows the user to provide their own interrupt vectors
@@ -236,18 +262,50 @@ int main(void) {
         isrTable[3][0x0F] = 0x80;
 #endif
 
+<<<<<<< Updated upstream
         isrTable[3][0x0C] = 0x00;   // User code address = 0x9000
         isrTable[3][0x0D] = 0x90;
+=======
+//        isrTable[3][0x0C] = 0x00;   // User code address = 0x9F80
+//        isrTable[3][0x0D] = 0xA0;
+        isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
+        isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
+      }
+>>>>>>> Stashed changes
 
         // Write ISR table
         for (i = 0; i < 8; i++) {
           flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
         }
 
+<<<<<<< Updated upstream
         // Jump to user code
 //        flashMorseString("jump last line\n");
         jumpToUserCode();
       }
+=======
+    // Check if it's time to execute user code (flashing done)
+    if (nextNeededLineNumber() >= (lastLineNumber + 1)) {
+      // Erase the vector table segment
+      // A memory segment has a size of 512 bytes
+      flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+      // Write ISR table
+      for (i = 0; i < 8; i++) {
+        flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
+      }
+      // Ask for line n+1 for a while (fake line)
+      fwVersionAndLineNumber = (((uint32_t)firmwareVersion) << 16) | (lastLineNumber + 1);
+      for (i = 0; i < 10; i++) {
+        timer.start(RESPONSE_TIMEOUT);
+        LED_ON();
+        TRANSMIT_GWAP_QUERY_LINE(fwVersionAndLineNumber);
+        LED_OFF();
+        // Wait timer timeout before asking again
+        while(!timer.timeout());
+      }
+
+      jumpToUserCode();
+>>>>>>> Stashed changes
     }
   }
 
@@ -257,6 +315,7 @@ int main(void) {
 
   return 0;
 }
+<<<<<<< Updated upstream
 
 /**
  * initCore
@@ -443,3 +502,5 @@ void delayClockCycles(register uint32_t n) {
   " jne        1b \n"
   :[n] "+r"(n));
 }
+=======
+>>>>>>> Stashed changes

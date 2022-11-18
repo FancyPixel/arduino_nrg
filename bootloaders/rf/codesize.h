@@ -1,0 +1,14 @@
+//
+// Created by Alessandro Verlato on 18/11/22.
+//
+
+#ifndef RF_BOOTLOADER_CODESIZE_H
+#define RF_BOOTLOADER_CODESIZE_H
+
+// Define bootloader code size
+
+//  ***  DO NOT MODIFY - THIS IS AUTOMATICALLY DEFINED AT BOOTLOADER COMPILE TIME  ***
+
+#define BOOTLOADER_CODE_SIZE 4522
+
+#endif //RF_BOOTLOADER_CODESIZE_H
