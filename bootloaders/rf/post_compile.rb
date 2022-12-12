@@ -50,10 +50,13 @@ program_size_data = `#{ PROGRAM_SIZE_COMMAND % ELF_FILE_PATH }`
 
 program_data_size = program_size_data.scan(PROGRAM_DATA_SIZE_REGEX).flatten.map(&:to_i).reduce :+
 memory_size = program_size_data.scan(MEMORY_SIZE_REGEX).flatten.map(&:to_i).reduce :+
-
+urom_new_origin = ((UROM_START + program_data_size) / FLASH_SEGMENT_SIZE.to_f).ceil * FLASH_SEGMENT_SIZE
+urom_length = UROM_END - urom_new_origin
 
 puts "\n\n\e[32m *** PROGRAM INFO *** \e[0m\n\n"
-puts " ***\e[33m Size:\e[0m #{program_data_size} bytes\n\n"
+puts "\e[33m - Bootloader size:\e[0m #{program_data_size} bytes\n\n"
+puts "\e[33m - Concentrator's startFirmwareAddress:\e[0m #{urom_new_origin.to_s(16)}\n\n"
+
 
 ### IF NECESSARY, UPDATE >BOOTLOADER_CODE_SIZE<  #define and recompile
 
@@ -76,8 +79,6 @@ if prev_bootloader_code_size != program_data_size
 
   # Update ldscript/memory_rf.x
   puts " - Updating\e[33m memory_rf.x\e[0m \e[32murom entry\e[0m\n"
-  urom_new_origin = ((UROM_START + program_data_size) / FLASH_SEGMENT_SIZE.to_f).ceil * FLASH_SEGMENT_SIZE
-  urom_length = UROM_END - urom_new_origin
 
   memory_rf_file_content = File.read MEMORY_RF_FILE_PATH
   memory_rf_file_content[MEMORY_RF_UROM_REGEX] = MEMORY_RF_UROM_LINE_TEMPLATE % [ "0x#{urom_new_origin.to_s(16)}", "0x#{urom_length.to_s(16)}", urom_length ]
