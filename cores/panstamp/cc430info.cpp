@@ -109,3 +109,16 @@ uint8_t CC430INFO::write(uint8_t *buffer, uint16_t section, uint16_t position, u
   return length;
 }
 
+void waitReady() {
+  while(FCTL3 & BUSY);
+}
+
+void CC430INFO::eraseSegment(uint8_t *memAddress) {
+  waitReady();
+  FCTL3 = FWKEY;              // Clear LOCK
+  FCTL1 = FWKEY | ERASE;      // Enable segment erase
+  *memAddress = 0;            // Dummy write, erase Segment
+  waitReady();
+  FCTL3 = FWKEY | LOCK;       // Done, set LOCK
+}
+
