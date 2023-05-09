@@ -117,23 +117,30 @@ int main(void) {
         // Poll PKSTATUS and number of bytes in the Rx FIFO
         if ((status & 0x01) && bytes) {
           while (ReadSingleReg(PKTSTATUS) & 0x01);
+
+          // Received packet example
+          // 2f000a0072e1694700000004   00   00   02   0064   0000   92000055425c0135d0085a8245e81f3140fe2b9b   9210003f4076000f9308249242e81f5c012f83a1   86
+          //         moteUid            cn   fnc  reg  fwVer  line#              line N data                             line N+1 data (optional)          crc
+
           // Packet received. Read packet and extract HEX line
           if (readHexLine()) {
             failedLineRequests = 0;
-            // RF Packet OK: crc ok, function = status, product code ok, regId = firmware
+            // RF Packet OK: crc ok, function = status, product code ok, regId = firmware (02)
             // Extract firmware version
             _fwVersion = getFwVersion(packet.data);
             // Data payload
-            dataLine = packet.data + GWAP_DATA_HEAD_LEN;
+            dataLine = packet.data + GWAP_DATA_HEAD_LEN;  // Jump to byte #15 (first byte of fwVersion)
             dataLineLength = packet.length - GWAP_DATA_HEAD_LEN - 1;
 
             // Correct data length?
-            if (dataLineLength > BYTES_PER_LINE) {
+            if (dataLineLength > MAX_BYTES_PER_LINE) {
               correctLineReceived = false;
               requestLine = false;
               break;
             }
 
+            // Extract line number
+            // When we receive 2 fw data lines, we consider the second line to have  lineNumber = receivedLineNumber + 1
             receivedLineNumber = getLineNumber(dataLine);
 
             if (firstLine) {
@@ -205,7 +212,7 @@ int main(void) {
 
     correctLineReceived = false;
 
-    dataLine += 4;
+    dataLine += 4;  // Jump to byte #19 (first byte of (first) data line)
     dataLineLength -= 4;
 
     // Is the line received OK?

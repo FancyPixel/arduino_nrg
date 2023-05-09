@@ -41,7 +41,7 @@
 #define RECTYPE_EOF   0x01
 
 // Maximum number of bytes per line
-#define BYTES_PER_LINE  48
+#define MAX_BYTES_PER_LINE  48
 
 // Responses from server have to be received before 200 ms after sending the query
 #define RESPONSE_TIMEOUT 500
@@ -75,9 +75,6 @@
 
 #define RECTYPE_DATA  0x00
 #define RECTYPE_EOF   0x01
-
-// Maximum number of bytes per line
-#define BYTES_PER_LINE  48
 
 void initCore(void);
 
