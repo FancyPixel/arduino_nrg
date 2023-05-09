@@ -40,8 +40,17 @@
 #define RECTYPE_DATA  0x00
 #define RECTYPE_EOF   0x01
 
-// Maximum number of bytes per line
-#define MAX_BYTES_PER_LINE  48
+// Maximum number of bytes of payload:  fwVersion + lineNumber + line1data + (line2data) + crc
+//                                          2            2           20      20 optional    1
+#define MAX_PAYLOAD_BYTES  45
+// Firmware version length
+#define FWVERSION_LEN_BYTES 2
+// Line number length
+#define LINE_NUMBER_LEN_BYTES 2
+// Firmware line length
+#define FW_LINE_LEN_BYTES 20
+// CRC length
+#define CRC_LEN_BYTES 1
 
 // Responses from server have to be received before 200 ms after sending the query
 #define RESPONSE_TIMEOUT 500

@@ -14,9 +14,13 @@ extern uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * M
 int main(void) {
   bool firstLine = true;
   // Length of last line received
-  uint8_t dataLineLength = 0;
+  uint8_t dataLineLength = 0, singleLineLength = 0;
+  // FW data lines bytes count. This should be either 20 (single line received) or 40 (double line received)
+  int8_t fwDataLen = 0;
+  // How many FW lines we received in the CCPacket (1 or 2)
+  uint8_t numberOfLinesReceived = 0;
   // Pointer to line buffer
-  uint8_t *dataLine;
+  uint8_t *dataLine, *singleLine;
   // ISR vector table
   uint8_t isrTable[8][16];
   // User code address
@@ -118,9 +122,14 @@ int main(void) {
         if ((status & 0x01) && bytes) {
           while (ReadSingleReg(PKTSTATUS) & 0x01);
 
+          // Max CC1101 packet length:  62 bytes
           // Received packet example
-          // 2f000a0072e1694700000004   00   00   02   0064   0000   92000055425c0135d0085a8245e81f3140fe2b9b   9210003f4076000f9308249242e81f5c012f83a1   86
-          //         moteUid            cn   fnc  reg  fwVer  line#              line N data                             line N+1 data (optional)          crc
+          // 2f000a0072e1694700000004   00   00   02   0064   0000   92000055425c0135d0085a8245e81f3140fe2b9b   9210003f4076000f9308249242e81f5c012f83a1   86     //  raw segments
+          //         moteUid            cn   fnc  reg  fwVer  line#              line N data                             line N+1 data (optional)          crc    //  segment data
+          //           12               1    1    1      2     2                     20                                         20                         1      //  segment length (bytes)
+
+          // Single-line total packet length: 40 bytes
+          // Two-lines total packet length: 60 bytes
 
           // Packet received. Read packet and extract HEX line
           if (readHexLine()) {
@@ -132,8 +141,11 @@ int main(void) {
             dataLine = packet.data + GWAP_DATA_HEAD_LEN;  // Jump to byte #15 (first byte of fwVersion)
             dataLineLength = packet.length - GWAP_DATA_HEAD_LEN - 1;
 
-            // Correct data length?
-            if (dataLineLength > MAX_BYTES_PER_LINE) {
+            // Calculate lines data length by stripping everything that's not fw data
+            fwDataLen = (dataLineLength - FWVERSION_LEN_BYTES - LINE_NUMBER_LEN_BYTES - CRC_LEN_BYTES);
+            numberOfLinesReceived = fwDataLen / FW_LINE_LEN_BYTES;
+            // Check if we received no lines or we received broken lines (less than FW_LINE_LEN_BYTES)
+            if (numberOfLinesReceived == 0 || (fwDataLen % FW_LINE_LEN_BYTES != 0)) {
               correctLineReceived = false;
               requestLine = false;
               break;
@@ -194,7 +206,7 @@ int main(void) {
         }
       }
 
-      // After firstline has been received but no other line has come along, force a line request
+      // After firstLine has been received but no other line has come along, force a line request
       if (nextLine > 0 && !correctLineReceived) {
         // Request a line with some probability
         if (random(0, 100) < 33) {
@@ -217,57 +229,65 @@ int main(void) {
 
     // Is the line received OK?
     if (checkCRC(dataLine, dataLineLength)) {
-      if (TYPE_OF_RECORD(dataLine) == RECTYPE_DATA) {
-        // Get target address
-        uint16_t addrFromHexFile = getTargetAddress(dataLine);
+      // For each received line
+      for (int line = 0; line < numberOfLinesReceived; line++) {
+        // Extract line N
+        memcpy(singleLine, &dataLine[line * FW_LINE_LEN_BYTES], FW_LINE_LEN_BYTES);
+        // Copy dataLineLength
+        singleLineLength = dataLineLength;
 
-        // Only for the first line received
-        if (firstLine) {
-          firstLine = false;
-          // Is the starting address from the hex file equal to our user flash starting address?
-          if (addrFromHexFile != userRomStartingAddress) {
-            // Jump to user code
-            jumpToUserCode();
-          } else {
-            // Starting address is OK
-            LED_ON();
-            // Erase user flash
-            while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
-              flash.eraseSegment((uint8_t *) userRomStartingAddress);
-              userRomStartingAddress += FLASH_SEGMENT_SIZE;
+        if (TYPE_OF_RECORD(singleLine) == RECTYPE_DATA) {
+
+          // Get target address
+          uint16_t addrFromHexFile = getTargetAddress(singleLine);
+
+          // Only for the first line received
+          if (firstLine) {
+            firstLine = false;
+            // Is the starting address from the hex file equal to our user flash starting address?
+            if (addrFromHexFile != userRomStartingAddress) {
+              // Jump to user code
+              jumpToUserCode();
+            } else {
+              // Starting address is OK
+              LED_ON();
+              // Erase user flash
+              while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
+                flash.eraseSegment((uint8_t *) userRomStartingAddress);
+                userRomStartingAddress += FLASH_SEGMENT_SIZE;
+              }
+
+              LED_OFF();
             }
-
-            LED_OFF();
           }
-        }
 
-        // Save vector table in buffer
-        if (addrFromHexFile >= VECTOR_TABLE_ADDR) {
-          uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
-          row /= 0x10;
+          // Save vector table in buffer
+          if (addrFromHexFile >= VECTOR_TABLE_ADDR) {
+            uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
+            row /= 0x10;
 
 //          for (i = 0; i < 16; i++) {
-//            isrTable[row][i] = dataLine[i];
+//            isrTable[row][i] = singleLine[i];
 //          }
-          for (i = 0; i < 16; i++) {
-            if (i < dataLineLength - 3)
-              isrTable[row][i] = dataLine[i + 3];
-            else
-              isrTable[row][i] = 0xFF;
+            for (i = 0; i < 16; i++) {
+              if (i < singleLineLength - 3)
+                isrTable[row][i] = singleLine[i + 3];
+              else
+                isrTable[row][i] = 0xFF;
+            }
+          } else {
+            LED_ON();
+            flash.write((uint8_t *) addrFromHexFile, singleLine + 3, singleLineLength - 4);
+            LED_OFF();
           }
-        } else {
-          LED_ON();
-          flash.write((uint8_t *) addrFromHexFile, dataLine + 3, dataLineLength - 4);
-          LED_OFF();
-        }
-      } else  { // Probably end of file
-        lastLineNumber = receivedLineNumber;
+        } else  { // Probably end of file
+          lastLineNumber = receivedLineNumber;
 
-        // Replace their reset vector with our bootloader address
-        // this allows the user to provide their own interrupt vectors
-        // however, the gdb boot code still runs first
+          // Replace their reset vector with our bootloader address
+          // this allows the user to provide their own interrupt vectors
+          // however, the gdb boot code still runs first
 #ifdef GDB_SERIAL_BOOT
-        isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
+          isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
         isrTable[7][0x0F] = 0x10;
 
         isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
@@ -276,12 +296,13 @@ int main(void) {
 
 //        isrTable[3][0x0C] = 0x00;   // User code address = 0x9F80
 //        isrTable[3][0x0D] = 0xA0;
-        isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
-        isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
-      }
+          isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
+          isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
+        }
 
-      // Mark line as flashed
-      markLineAsFlashed(receivedLineNumber);
+        // Mark line as flashed
+        markLineAsFlashed(receivedLineNumber);
+      }
     }
 
     // Check if it's time to execute user code (flashing done)
