@@ -172,19 +172,10 @@ public:
      *
      * @return True if the transmission succeeds. False otherwise
      */
-    template<class T>
-    bool sendPacketVal(uint8_t funct, uint8_t regId, T val) {
-      int i;
-      int size = sizeof(val);
-      uint8_t buf[size];
+    bool sendPacketVal(uint8_t funct, uint8_t regId, uint8_t val) {
+      uint8_t buf[] = { val };
 
-      for (i = size; i > 0; i--) {
-//        flashMorseLine(val & 0xFF);
-        buf[i - 1] = val & 0xFF;
-        val >>= 8;
-      }
-
-      return sendPacket(funct, regId, buf, size);
+      return sendPacket(funct, regId, buf, 1);
     }
 
     void nvolatToFactoryDefaults() {

@@ -84,6 +84,11 @@ void initCore() {
    * Interrupt Edge select register: 1 == Interrupt on High to Low transition.
    */
   RF1AIES = BIT0 | BIT9;
+
+  // Config pins as outputs by default except P2, wich contains the ADC inputs
+  P1DIR = 0xFF;
+  P3DIR = 0xFF;
+  PJDIR = 0xFF;
 }
 
 // Return @true if the line has already been flashed
@@ -205,4 +210,25 @@ void ledBlink(uint8_t times) {
     LED_OFF();
     for (j = 0; j < delayTimes; j++) { delayClockCycles(cycles); }
   }
+}
+
+
+uint16_t getCapabilities() {
+  uint16_t capabilities = 0;
+  capabilities |= CAPABILITY_2LINES;
+  return capabilities;
+}
+
+uint8_t* createQueryDataFrom(uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities) {
+  uint8_t buf[] = {
+          (firmwareVersion >> 8) & 0xFF, firmwareVersion & 0xFF,
+          (lineNumber >> 8) & 0xFF, lineNumber & 0xFF,
+          (capabilities >> 8) & 0xFF, capabilities & 0xFF
+  };
+
+  return buf;
+}
+
+bool transmitGwapQueryLine(uint8_t *data) {
+  gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);  // TODO:  len??!?!?
 }
