@@ -3,7 +3,7 @@
 #include "functions.h"
 #include "utils.h"
 
-#define DEBUG true
+//#define DEBUG true
 
 //#define WORKING_MODE MODE_4800
 #define WORKING_MODE MODE_38400
@@ -111,17 +111,15 @@ int main(void) {
     while (!correctLineReceived) {
 //      flashMorseLine("s");
       nextLine = nextNeededLineNumber();
-      startCommunication();
-      endCommunication();
 //      flashMorseString("n ");
 //      flashMorseLine(nextLine);
       if (requestLine) {
-        LED_ON();
+//        LED_ON();
         // Combine fwVersion, needed line number and capabilities and query firmware line
 //        flashMorseLine(firmwareVersion);
         createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
         transmitGwapQueryLine(queryData);
-        LED_OFF();
+//        LED_OFF();
         failedLineRequests++;
       }
 
@@ -308,9 +306,9 @@ int main(void) {
         } else {
 //          flashMorseLine("f");
           // Flash firmware line
-          LED_ON();
+//          LED_ON();
           flash.write((uint8_t *) addrFromHexFile, currentLine + 3, currentLineLength - 4);
-          LED_OFF();
+//          LED_OFF();
         }
       } else  { // Probably end of file
 //        flashMorseLine("l");
