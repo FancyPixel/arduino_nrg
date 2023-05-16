@@ -53,6 +53,8 @@
 // Number of bytes for representing CRC
 #define CRC_BYTES_COUNT 1
 
+#define GWAP_QUERY_BYTES_COUNT 6
+
 // Responses from server have to be received before 200 ms after sending the query
 #define RESPONSE_TIMEOUT 500
 #define MAX_SKETCH_LINES 1600
@@ -94,7 +96,7 @@ void ledBlink(uint8_t times);
 
 uint16_t getCapabilities();
 
-uint8_t* createQueryDataFrom(uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities);
+uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities);
 
 // Query firmware line from node with address 1
 bool transmitGwapQueryLine(uint8_t *data);

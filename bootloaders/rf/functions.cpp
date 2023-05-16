@@ -3,6 +3,7 @@
 //
 
 #include "functions.h"
+#include "utils.h"
 
 GWAP gwap;
 // Global packet
@@ -137,9 +138,9 @@ void factoryReset() {
 }
 
 uint16_t getLineNumber(uint8_t *data) {
-  uint16_t lineNb = data[2];
+  uint16_t lineNb = data[0];
   lineNb <<= 8;
-  lineNb |= data[3];
+  lineNb |= data[1];
 
   return lineNb;
 }
@@ -159,16 +160,13 @@ uint16_t getFwVersion(uint8_t *line) {
 }
 
 bool checkCRC(uint8_t *data, uint8_t len) {
-  uint8_t crc = len - 4;
-  uint8_t i, dataLen = len - 1;
+  uint8_t crc = 0;
 
-  for (i = 0; i < dataLen; i++) {
+  for (uint8_t i = 0; i < len - 1; i++) {
     crc += data[i];
   }
 
-  crc = ~crc + 1;
-
-  if (crc == data[dataLen]) {
+  if (crc == data[len - 1]) {
     return true;
   }
 
@@ -219,16 +217,17 @@ uint16_t getCapabilities() {
   return capabilities;
 }
 
-uint8_t* createQueryDataFrom(uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities) {
-  uint8_t buf[] = {
-          (firmwareVersion >> 8) & 0xFF, firmwareVersion & 0xFF,
-          (lineNumber >> 8) & 0xFF, lineNumber & 0xFF,
-          (capabilities >> 8) & 0xFF, capabilities & 0xFF
-  };
+uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t fwVer, uint16_t lineNum, uint16_t capab) {
+  buf[0] = (fwVer >> 8) & 0xFF;
+  buf[1] = fwVer & 0xFF;
+  buf[2] = (lineNum >> 8) & 0xFF;
+  buf[3] = lineNum & 0xFF;
+  buf[4] = (capab >> 8) & 0xFF;
+  buf[5] = capab & 0xFF;
 
   return buf;
 }
 
 bool transmitGwapQueryLine(uint8_t *data) {
-  gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);  // TODO:  len??!?!?
+  gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);
 }

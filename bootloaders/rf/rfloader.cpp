@@ -3,6 +3,8 @@
 #include "functions.h"
 #include "utils.h"
 
+#define DEBUG true
+
 //#define WORKING_MODE MODE_4800
 #define WORKING_MODE MODE_38400
 
@@ -17,19 +19,19 @@ int main(void) {
   bool firstLine = true;
   // Length of last line received
   uint8_t dataLineLength = 0, currentLineLength = 0;
-  // How many FW lines we received in the CCPacket (1 or 2)
-  uint8_t firstLineLength = 0;
   // Pointer to line buffer
-  uint8_t *dataLine, currentLine[FW_LINE_LEN_BYTES_COUNT + 1];
+  uint8_t *dataLine;
+  uint8_t *currentLine = (uint8_t*)malloc(sizeof(uint8_t) * (FW_LINE_LEN_BYTES_COUNT + 1));
+  uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
   // ISR vector table
   uint8_t isrTable[8][16];
   // User code address
   uint16_t userCodeAddr;
   bool correctLineReceived = false;
   uint16_t firmwareVersion = 0xFFFF;
+  bool requestLine = true, parsingFirstLine = true, finishedParsing = false;
   uint16_t _fwVersion = 0xFFFF; // This must be here
   uint8_t status, bytes, i;
-  bool requestLine = true;
   uint16_t failedLineRequests = 0;
   uint16_t receivedLineNumber = 0;
   uint16_t nextLine;
@@ -40,11 +42,15 @@ int main(void) {
    * DO NOT CHANGE the order of the code lines if you want to have a working morse decoding
    */
   CONFIG_LED();
+#ifdef DEBUG
   CONFIG_MORSE_OUT();
+#endif
   CONFIG_RESET_PIN();
 
   // *** You must uncomment this line in order to startup morse decoding ***
+#ifdef DEBUG
   flashMorseString("start\n");
+#endif
 
   // This flag will tell us whether wireless bootloader needs to start or not
   bool *ptr1;
@@ -103,21 +109,24 @@ int main(void) {
 
   while (1) {
     while (!correctLineReceived) {
+//      flashMorseLine("s");
       nextLine = nextNeededLineNumber();
+      startCommunication();
+      endCommunication();
+//      flashMorseString("n ");
+//      flashMorseLine(nextLine);
       if (requestLine) {
         LED_ON();
         // Combine fwVersion, needed line number and capabilities and query firmware line
 //        flashMorseLine(firmwareVersion);
-//        flashMorseLine(nextLine);
-//        flashMorseLine(getCapabilities());
-        transmitGwapQueryLine(createQueryDataFrom(firmwareVersion, nextLine, getCapabilities()));
+        createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
+        transmitGwapQueryLine(queryData);
         LED_OFF();
         failedLineRequests++;
       }
 
       // Start timer
       timer.start(RESPONSE_TIMEOUT);
-
       while (!timer.timeout()) {
         status = ReadSingleReg(PKTSTATUS);
         bytes = ReadSingleReg(RXBYTES);
@@ -128,40 +137,36 @@ int main(void) {
 
           // Max CC1101 packet length:  62 bytes
           // Received packet example
-          // 2f000a0072e1694700000004   00   00   02   0064     0000         14       92000055425c0135d0085a8245e81f3140fe2b9b   9210003f4076000f9308249242e81f5c012f83a1   86     //  raw segments
-          //         moteUid            cn   fnc  reg  fwVer  line num   line N len                line N data                           line N+1 data (optional)           crc    //  segment data
-          //           12               1    1    1      2        2           1                        20                                         20                         1     //  segment length (bytes)
+          // Data         // 2f000a0072e1694700000004   00   00   02   0064    0000          14        94000055425c0135d0085a8245ea1f3140fe2b97     (9410003f4076000f9308249242ea1f5c012f839d)    ae     //  raw segments
+          // Meaning      //       moteUid              cn   fn   reg  fwVer  line num   line N len                 line N data                                (line N+1 data)                    crc    //  segment meaning
+          // Bytes count  //          12                1    1    1     2        2           1                         20                                           (20)                          1      //  segment length (bytes)
 
           // Single-line total packet length: 41 bytes
-          // Two-lines total packet length: 61 bytes
+          // Two-lines total packet length: 62 bytes
 
-
-          // 00 00 02 0064 0000 0000 0001 94000055425c0135d0085a8245ea1f3140fe2b97 97
+          // 2f000a0072e1694700000004 00 00 02 0064 0000 14  94000055425c0135d0085a8245ea1f3140fe2b97  9410003f4076000f9308249242ea1f5c012f839d  9a
 
           // Packet received. Read packet and extract HEX line
           if (readHexLine()) {
+            if (!checkCRC(packet.data, packet.length)) {
+//              flashMorseLine("x");
+              correctLineReceived = false;
+              requestLine = true;
+              break;
+            }
             failedLineRequests = 0;
             // RF Packet OK: crc ok, function = status, product code ok, regId = firmware (02)
             // Extract firmware version
             _fwVersion = getFwVersion(packet.data);
             // Data payload
-            dataLine = packet.data + GWAP_DATA_HEAD_LEN;  // Jump to byte #15 (first byte of fwVersion)
-            dataLineLength = packet.length - GWAP_DATA_HEAD_LEN - 1;
+            dataLine = packet.data + GWAP_DATA_HEAD_LEN + FWVERSION_BYTES_COUNT;  // Jump to byte #17 (first byte of line number)
+            dataLineLength = packet.length - GWAP_DATA_HEAD_LEN - FWVERSION_BYTES_COUNT - 1;
 
             // Extract line number
             // When we receive 2 fw data lines, we consider the second line to have  lineNumber = receivedLineNumber + 1
             receivedLineNumber = getLineNumber(dataLine);
 
-//            // Check lines lengths
-//            // Calculate lines data length by stripping everything that's not fw data. CRC has already been removed previously
-//            fwDataLen = (dataLineLength - FWVERSION_BYTES_COUNT - LINE_NUMBER_BYTES_COUNT);
-//            numberOfLinesReceived = fwDataLen / FW_LINE_LEN_BYTES_COUNT;
-//            // Check if we received no lines or we received broken lines
-//            if (numberOfLinesReceived == 0 || (fwDataLen % FW_LINE_LEN_BYTES_COUNT != 0)) {
-//              correctLineReceived = false;
-//              requestLine = false;
-//              break;
-//            }
+//            flashMorseString("r "); flashMorseLine(receivedLineNumber);
 
             if (firstLine) {
               // Skip line if it isn't the first one. Ask again line 0, with some probability
@@ -232,98 +237,104 @@ int main(void) {
 
     correctLineReceived = false;
 
+    dataLine += 2;  // Jump to byte #19 (first line len)
+    dataLineLength -= 2;
+
+    // Parse received lines
     // Extract first line length
-
-    firstLineLength = dataLine[4];
-    dataLine += 4;  // Jump to byte #19 (first line len)
-    dataLineLength -= 4;
-
-    // Is the line received OK?
-    if (checkCRC(dataLine, dataLineLength)) {
-      // Parse received lines
-      currentLineLength = dataLine[0];
-      // While we still have lines to read...
-      // If we're left with only one byte in the line, this is the CRC, so break
-      while(dataLineLength > 1) {
+    currentLineLength = dataLine[0];
+    parsingFirstLine = true;
+    finishedParsing = false;
+    // While we still have lines to read...
+    while(!finishedParsing) {
+      // TODO: memset as 0x00 ???
+      memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
+      if (parsingFirstLine) {
+//        flashMorseLine("1");
         currentLineLength = dataLine[0];
+
         dataLine += 1; // Jump to first byte of current line
         dataLineLength -= 1;
-//        // Point to line N
-//        currentLine = &dataLine[line * currentLineLength];
-        // Copy data line to currentLine
-        memcpy(currentLine, &dataLine, currentLineLength);
 
-        if (TYPE_OF_RECORD(currentLine) == RECTYPE_DATA) {
+        parsingFirstLine = false;
+      } else {
+//        flashMorseLine("2");
+        // Empty current line
+        currentLineLength = dataLineLength;
+        finishedParsing = true;
+        receivedLineNumber++;
+      }
 
-          // Get target address
-          uint16_t addrFromHexFile = getTargetAddress(currentLine);
+      // Copy data line to currentLine
+      memcpy(currentLine, dataLine, currentLineLength);
+      dataLine += currentLineLength; // Jump to first byte of current line
+      dataLineLength -= currentLineLength;
 
-          // Only for the first line received
-          if (firstLine) {
-            firstLine = false;
-            // Is the starting address from the hex file equal to our user flash starting address?
-            if (addrFromHexFile != userRomStartingAddress) {
-              // Jump to user code
-              jumpToUserCode();
-            } else {
-              // Starting address is OK
-              LED_ON();
-              // Erase user flash
-              while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
-                flash.eraseSegment((uint8_t *) userRomStartingAddress);
-                userRomStartingAddress += FLASH_SEGMENT_SIZE;
-              }
+      if (TYPE_OF_RECORD(currentLine) == RECTYPE_DATA) {
+        // Get target address
+        uint16_t addrFromHexFile = getTargetAddress(currentLine);
 
-              LED_OFF();
-            }
-          }
+        // Only for the first line received
+        if (firstLine) {
+          firstLine = false;
 
-          // Save vector table in buffer
-          if (addrFromHexFile >= VECTOR_TABLE_ADDR) {
-            uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
-            row /= 0x10;
-
-//          for (i = 0; i < 16; i++) {
-//            isrTable[row][i] = currentLine[i];
-//          }
-            for (i = 0; i < 16; i++) {
-              if (i < currentLineLength - 3)
-                isrTable[row][i] = currentLine[i + 3];
-              else
-                isrTable[row][i] = 0xFF;
-            }
+          // Is the starting address from the hex file equal to our user flash starting address?
+          if (addrFromHexFile != userRomStartingAddress) {
+            // Jump to user code
+            jumpToUserCode();
           } else {
+            // Starting address is OK
             LED_ON();
-            flash.write((uint8_t *) addrFromHexFile, currentLine + 3, currentLineLength - 4);
+            // Erase user flash
+            while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
+              flash.eraseSegment((uint8_t *) userRomStartingAddress);
+              userRomStartingAddress += FLASH_SEGMENT_SIZE;
+            }
             LED_OFF();
           }
-        } else  { // Probably end of file
-          lastLineNumber = receivedLineNumber;
-
-          // Replace their reset vector with our bootloader address
-          // this allows the user to provide their own interrupt vectors
-          // however, the gdb boot code still runs first
-#ifdef GDB_SERIAL_BOOT
-          isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
-        isrTable[7][0x0F] = 0x10;
-
-        isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
-        isrTable[3][0x0F] = 0x80;
-#endif
-
-//        isrTable[3][0x0C] = 0x00;   // User code address = 0x9F80
-//        isrTable[3][0x0D] = 0xA0;
-          isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
-          isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
         }
 
-        // Mark line as flashed
-        markLineAsFlashed(receivedLineNumber);
+        // Save vector table in buffer
+        if (addrFromHexFile >= VECTOR_TABLE_ADDR) {
+          uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
+          row /= 0x10;
 
-        // Jump to start of next line
-        dataLine += currentLineLength;
-        dataLineLength -= currentLineLength;
+          for (i = 0; i < 16; i++) {
+            if (i < currentLineLength - 3)
+              isrTable[row][i] = currentLine[i + 3];
+            else
+              isrTable[row][i] = 0xFF;
+          }
+        } else {
+//          flashMorseLine("f");
+          // Flash firmware line
+          LED_ON();
+          flash.write((uint8_t *) addrFromHexFile, currentLine + 3, currentLineLength - 4);
+          LED_OFF();
+        }
+      } else  { // Probably end of file
+//        flashMorseLine("l");
+        lastLineNumber = receivedLineNumber;
+
+        // Replace their reset vector with our bootloader address
+        // this allows the user to provide their own interrupt vectors
+        // however, the gdb boot code still runs first
+#ifdef GDB_SERIAL_BOOT
+        isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
+      isrTable[7][0x0F] = 0x10;
+
+      isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
+      isrTable[3][0x0F] = 0x80;
+#endif
+
+        isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
+        isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
       }
+
+      // Mark line as flashed
+//      flashMorseString("nn ");
+//      flashMorseLine(receivedLineNumber);
+      markLineAsFlashed(receivedLineNumber);
     }
 
     // Check if it's time to execute user code (flashing done)
@@ -339,7 +350,9 @@ int main(void) {
       for (i = 0; i < 10; i++) {
         timer.start(RESPONSE_TIMEOUT);
         LED_ON();
-        transmitGwapQueryLine(createQueryDataFrom(firmwareVersion, nextLine, getCapabilities()));
+//        flashMorseLine("c");
+        createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
+        transmitGwapQueryLine(queryData);
         LED_OFF();
         // Wait timer timeout before asking again
         while(!timer.timeout());
