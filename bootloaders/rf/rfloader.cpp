@@ -109,17 +109,13 @@ int main(void) {
 
   while (1) {
     while (!correctLineReceived) {
-//      flashMorseLine("s");
       nextLine = nextNeededLineNumber();
-//      flashMorseString("n ");
-//      flashMorseLine(nextLine);
       if (requestLine) {
-//        LED_ON();
+        LED_ON();
         // Combine fwVersion, needed line number and capabilities and query firmware line
-//        flashMorseLine(firmwareVersion);
         createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
         transmitGwapQueryLine(queryData);
-//        LED_OFF();
+        LED_OFF();
         failedLineRequests++;
       }
 
@@ -147,7 +143,6 @@ int main(void) {
           // Packet received. Read packet and extract HEX line
           if (readHexLine()) {
             if (!checkCRC(packet.data, packet.length)) {
-//              flashMorseLine("x");
               correctLineReceived = false;
               requestLine = true;
               break;
@@ -163,8 +158,6 @@ int main(void) {
             // Extract line number
             // When we receive 2 fw data lines, we consider the second line to have  lineNumber = receivedLineNumber + 1
             receivedLineNumber = getLineNumber(dataLine);
-
-//            flashMorseString("r "); flashMorseLine(receivedLineNumber);
 
             if (firstLine) {
               // Skip line if it isn't the first one. Ask again line 0, with some probability
@@ -248,7 +241,6 @@ int main(void) {
       // TODO: memset as 0x00 ???
       memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
       if (parsingFirstLine) {
-//        flashMorseLine("1");
         currentLineLength = dataLine[0];
 
         dataLine += 1; // Jump to first byte of current line
@@ -256,7 +248,6 @@ int main(void) {
 
         parsingFirstLine = false;
       } else {
-//        flashMorseLine("2");
         // Empty current line
         currentLineLength = dataLineLength;
         finishedParsing = true;
@@ -304,14 +295,12 @@ int main(void) {
               isrTable[row][i] = 0xFF;
           }
         } else {
-//          flashMorseLine("f");
           // Flash firmware line
-//          LED_ON();
+          LED_ON();
           flash.write((uint8_t *) addrFromHexFile, currentLine + 3, currentLineLength - 4);
-//          LED_OFF();
+          LED_OFF();
         }
       } else  { // Probably end of file
-//        flashMorseLine("l");
         lastLineNumber = receivedLineNumber;
 
         // Replace their reset vector with our bootloader address
@@ -330,8 +319,6 @@ int main(void) {
       }
 
       // Mark line as flashed
-//      flashMorseString("nn ");
-//      flashMorseLine(receivedLineNumber);
       markLineAsFlashed(receivedLineNumber);
     }
 
@@ -348,7 +335,6 @@ int main(void) {
       for (i = 0; i < 10; i++) {
         timer.start(RESPONSE_TIMEOUT);
         LED_ON();
-//        flashMorseLine("c");
         createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
         transmitGwapQueryLine(queryData);
         LED_OFF();
