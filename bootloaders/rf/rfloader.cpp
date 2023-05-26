@@ -29,12 +29,12 @@ int main(void) {
   uint16_t userCodeAddr;
   bool correctLineReceived = false;
   uint16_t firmwareVersion = 0xFFFF;
-  bool requestLine = true, parsingFirstLine = true, finishedParsing = false, lastLineReceived = false;
+  bool requestLine = true, parsingFirstLine = true, finishedParsing = false;
   uint16_t _fwVersion = 0xFFFF; // This must be here
   uint8_t status, bytes, i;
   uint16_t failedLineRequests = 0;
   uint16_t receivedLineNumber = 0;
-  uint16_t nextLine, lastLineNumber = 0;
+  uint16_t nextNeededLineNumber, fwLastLineNumber = 0xFFFE;\
 
   /*
    * *** IMPORTANT ***
@@ -108,11 +108,11 @@ int main(void) {
 
   while (1) {
     while (!correctLineReceived) {
-      nextLine = nextNeededLineNumber();
+      nextNeededLineNumber = nextNeededLineNumber();
       if (requestLine) {
         LED_ON();
         // Combine fwVersion, needed line number and capabilities and query firmware line
-        createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
+        createQueryDataFrom(queryData, firmwareVersion, nextNeededLineNumber, getCapabilities());
         transmitGwapQueryLine(queryData);
         LED_OFF();
         failedLineRequests++;
@@ -141,9 +141,18 @@ int main(void) {
 
           // Packet received.
 
+
+          // TODO: MOLTO PROBABILMENTE QUESTO PEZZO DI CODICE ANDRÁ SPOSTATO PIÚ SOTTO/INNESTATO, MA PRIMA
+          // TODO: DI TUTTO BISOGNA AGGIUNGERE LA VERIFICA CHE IL PACCHETTO RICEVUTO SIA PER IL MIO PRODUCT_CODE
+          // Per cui probabilmente si può modificare la funzione "isCCPACKETAddressedToMe" (e magari cambiargli nome)
+          // per fare in modo che controlli il PRODUCT_CODE invece che controllare il "broadcast".
+          // Il fatto di settare il primo byte dell'indirizzo ("broadcast") a zero direi che può essere tolto, ma
+          // bisogna modificare anche il concentratore
+
+
           // Check if it's time to execute user code (flashing done)
           // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
-          if (lastLineReceived && nextLine >= lastLineNumber) {
+          if (nextNeededLineNumber >= fwLastLineNumber) {
             // Erase the vector table segment
             // A memory segment has a size of 512 bytes
             flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
@@ -229,7 +238,7 @@ int main(void) {
       }
 
       // After firstLine has been received but no other line has come along, force a line request
-      if (nextLine > 0 && !correctLineReceived) {
+      if (nextNeededLineNumber > 0 && !correctLineReceived) {
         // Request a line with some probability
         if (random(0, 100) < 33) {
           requestLine = true;
@@ -253,7 +262,7 @@ int main(void) {
     parsingFirstLine = true;
     finishedParsing = false;
     // While we still have lines to read...
-    while(!finishedParsing && !lastLineReceived && (dataLineLength > 0)) {
+    while(!finishedParsing && (dataLineLength > 0)) {
       // TODO: memset as 0x00 ???
       memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
       if (parsingFirstLine) {
@@ -317,8 +326,7 @@ int main(void) {
           LED_OFF();
         }
       } else  { // Probably end of file
-        lastLineReceived = true;
-        lastLineNumber = receivedLineNumber;
+        fwLastLineNumber = receivedLineNumber;
 
         // Replace their reset vector with our bootloader address
         // this allows the user to provide their own interrupt vectors

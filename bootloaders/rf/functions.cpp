@@ -229,5 +229,5 @@ uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t fwVer, uint16_t lineNum, uin
 }
 
 bool transmitGwapQueryLine(uint8_t *data) {
-  gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);
+  return gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);
 }
