@@ -29,13 +29,12 @@ int main(void) {
   uint16_t userCodeAddr;
   bool correctLineReceived = false;
   uint16_t firmwareVersion = 0xFFFF;
-  bool requestLine = true, parsingFirstLine = true, finishedParsing = false;
+  bool requestLine = true, parsingFirstLine = true, finishedParsing = false, lastLineReceived = false;
   uint16_t _fwVersion = 0xFFFF; // This must be here
   uint8_t status, bytes, i;
   uint16_t failedLineRequests = 0;
   uint16_t receivedLineNumber = 0;
-  uint16_t nextLine;
-  uint16_t lastLineNumber = -10; // Init a lot negative
+  uint16_t nextLine, lastLineNumber = 0;
 
   /*
    * *** IMPORTANT ***
@@ -140,7 +139,23 @@ int main(void) {
 
           // 2f000a0072e1694700000004 00 00 02 0064 0000 14  94000055425c0135d0085a8245ea1f3140fe2b97  9410003f4076000f9308249242ea1f5c012f839d  9a
 
-          // Packet received. Read packet and extract HEX line
+          // Packet received.
+
+          // Check if it's time to execute user code (flashing done)
+          // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
+          if (lastLineReceived && nextLine >= lastLineNumber) {
+            // Erase the vector table segment
+            // A memory segment has a size of 512 bytes
+            flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+            // Write ISR table
+            for (i = 0; i < 8; i++) {
+              flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
+            }
+
+            jumpToUserCode();
+          }
+
+          // Read packet and extract HEX line
           if (readHexLine()) {
             if (!checkCRC(packet.data, packet.length)) {
               correctLineReceived = false;
@@ -189,6 +204,9 @@ int main(void) {
               }
               // If we need the line (it hasn't already been flashed)
               if (!hasLineBeenFlashed(receivedLineNumber)) {
+
+                // TODO:  Il tag-along ora non (dovrebbe) funziona(re) perché ho disabilitato il broadcast da concentratore
+
                 if (gwap.isCCPACKETAddressedToMe(&packet, true)) {
                   // I'm a "Master" mote requesting lines, continue doing so
                   correctLineReceived = true;
@@ -232,12 +250,10 @@ int main(void) {
     dataLineLength -= 2;
 
     // Parse received lines
-    // Extract first line length
-    currentLineLength = dataLine[0];
     parsingFirstLine = true;
     finishedParsing = false;
     // While we still have lines to read...
-    while(!finishedParsing) {
+    while(!finishedParsing && !lastLineReceived && (dataLineLength > 0)) {
       // TODO: memset as 0x00 ???
       memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
       if (parsingFirstLine) {
@@ -301,6 +317,7 @@ int main(void) {
           LED_OFF();
         }
       } else  { // Probably end of file
+        lastLineReceived = true;
         lastLineNumber = receivedLineNumber;
 
         // Replace their reset vector with our bootloader address
@@ -320,29 +337,6 @@ int main(void) {
 
       // Mark line as flashed
       markLineAsFlashed(receivedLineNumber);
-    }
-
-    // Check if it's time to execute user code (flashing done)
-    if (nextNeededLineNumber() >= (lastLineNumber + 1)) {
-      // Erase the vector table segment
-      // A memory segment has a size of 512 bytes
-      flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
-      // Write ISR table
-      for (i = 0; i < 8; i++) {
-        flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
-      }
-      // Ask for line n+1 for a while (fake line)
-      for (i = 0; i < 10; i++) {
-        timer.start(RESPONSE_TIMEOUT);
-        LED_ON();
-        createQueryDataFrom(queryData, firmwareVersion, nextLine, getCapabilities());
-        transmitGwapQueryLine(queryData);
-        LED_OFF();
-        // Wait timer timeout before asking again
-        while(!timer.timeout());
-      }
-
-      jumpToUserCode();
     }
   }
 }
