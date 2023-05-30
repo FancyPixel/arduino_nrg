@@ -34,27 +34,27 @@ int main(void) {
   uint8_t status, bytes, i;
   uint16_t failedLineRequests = 0;
   uint16_t receivedLineNumber = 0;
-  uint16_t nextNeededLineNumber, fwLastLineNumber = 0xFFFE;\
+  uint16_t neededLineNum, fwLastLineNumber = 0xFFFE;\
 
   /*
    * *** IMPORTANT ***
    * DO NOT CHANGE the order of the code lines if you want to have a working morse decoding
    */
   CONFIG_LED();
-#ifdef DEBUG
-  CONFIG_MORSE_OUT();
-#endif
-  CONFIG_RESET_PIN();
+  #ifdef DEBUG
+    CONFIG_MORSE_OUT();
+  #endif
+    CONFIG_RESET_PIN();
 
   // *** You must uncomment this line in order to startup morse decoding ***
-#ifdef DEBUG
-  flashMorseString("start\n");
-#endif
+  #ifdef DEBUG
+    flashMorseString("start\n");
+  #endif
 
   // This flag will tell us whether wireless bootloader needs to start or not
   bool *ptr1;
   ptr1 = (bool *) RAM_END_ADDRESS;  // Memory address at the end of the stack
-  bool runUserCode = *ptr1;       // Read value
+  bool runUserCode = *ptr1;         // Read value. If "false" it means we're coming from sketch space
 
   // Read user code starting address
   uint16_t *ptr2;
@@ -75,7 +75,7 @@ int main(void) {
   }
 
   // Some fancy blinking for signaling that we're on bootloader
-  for (int j = 0; j < 2; j++) {
+  for (int j = 0; j < 20; j++) {
     LED_ON();
     delayClockCycles(5000L);
     LED_OFF();
@@ -93,7 +93,8 @@ int main(void) {
   if (!isVirgin && (userCodeAddr != 0xFFFF)) {
     // Jump to user code if the wireless bootloader was not called from there
     if (runUserCode) {
-      jumpToUserCode();
+//      jumpToUserCode();
+      testJump();
     }
   }
 
@@ -108,11 +109,11 @@ int main(void) {
 
   while (1) {
     while (!correctLineReceived) {
-      nextNeededLineNumber = nextNeededLineNumber();
+      neededLineNum = nextNeededLineNumber();
       if (requestLine) {
         LED_ON();
         // Combine fwVersion, needed line number and capabilities and query firmware line
-        createQueryDataFrom(queryData, firmwareVersion, nextNeededLineNumber, getCapabilities());
+        createQueryDataFrom(queryData, firmwareVersion, neededLineNum, getCapabilities());
         transmitGwapQueryLine(queryData);
         LED_OFF();
         failedLineRequests++;
@@ -141,38 +142,55 @@ int main(void) {
 
           // Packet received.
 
-
-          // TODO: MOLTO PROBABILMENTE QUESTO PEZZO DI CODICE ANDRÁ SPOSTATO PIÚ SOTTO/INNESTATO, MA PRIMA
-          // TODO: DI TUTTO BISOGNA AGGIUNGERE LA VERIFICA CHE IL PACCHETTO RICEVUTO SIA PER IL MIO PRODUCT_CODE
-          // Per cui probabilmente si può modificare la funzione "isCCPACKETAddressedToMe" (e magari cambiargli nome)
-          // per fare in modo che controlli il PRODUCT_CODE invece che controllare il "broadcast".
-          // Il fatto di settare il primo byte dell'indirizzo ("broadcast") a zero direi che può essere tolto, ma
-          // bisogna modificare anche il concentratore
-
+          // TODO: MOLTO PROBABILMENTE QUESTO PEZZO DI CODICE ANDRÁ SPOSTATO PIÚ SOTTO/INNESTATO
 
           // Check if it's time to execute user code (flashing done)
           // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
-          if (nextNeededLineNumber >= fwLastLineNumber) {
+          if (neededLineNum >= fwLastLineNumber) {
             // Erase the vector table segment
             // A memory segment has a size of 512 bytes
             flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+
+            // Replace their reset vector with our bootloader address
+            // this allows the user to provide their own interrupt vectors
+            // however, the gdb boot code still runs first
+            #ifdef GDB_SERIAL_BOOT
+              isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
+              isrTable[7][0x0F] = 0x10;
+
+              isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
+              isrTable[3][0x0F] = 0x80;
+            #endif
+
+            // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            //      0 1 2 3 4 5 6 7 8 9 A B C D E F
+
+            isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
+            isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
+
+            isrTable[7][0x0E] = 0x8000 & 0xFF;
+            isrTable[7][0x0F] = (0x8000 >> 8) & 0xFF;
+
             // Write ISR table
             for (i = 0; i < 8; i++) {
               flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
             }
 
-            jumpToUserCode();
+            testJump();
+//            jumpToUserCode();
           }
 
           // Read packet and extract HEX line
-          if (readHexLine()) {
+          if (readHexLine()) {  // This also checks PRODUCT_CODE
             if (!checkCRC(packet.data, packet.length)) {
               correctLineReceived = false;
               requestLine = true;
               break;
             }
             failedLineRequests = 0;
-            // RF Packet OK: crc ok, function = status, product code ok, regId = firmware (02)
+
+            // *** RF Packet OK: crc ok, function = status, PRODUCT_CODE ok, regId = firmware (02) ***
+
             // Extract firmware version
             _fwVersion = getFwVersion(packet.data);
             // Data payload
@@ -213,9 +231,6 @@ int main(void) {
               }
               // If we need the line (it hasn't already been flashed)
               if (!hasLineBeenFlashed(receivedLineNumber)) {
-
-                // TODO:  Il tag-along ora non (dovrebbe) funziona(re) perché ho disabilitato il broadcast da concentratore
-
                 if (gwap.isCCPACKETAddressedToMe(&packet, true)) {
                   // I'm a "Master" mote requesting lines, continue doing so
                   correctLineReceived = true;
@@ -238,7 +253,7 @@ int main(void) {
       }
 
       // After firstLine has been received but no other line has come along, force a line request
-      if (nextNeededLineNumber > 0 && !correctLineReceived) {
+      if (neededLineNum > 0 && !correctLineReceived) {
         // Request a line with some probability
         if (random(0, 100) < 33) {
           requestLine = true;
@@ -295,7 +310,8 @@ int main(void) {
           // Is the starting address from the hex file equal to our user flash starting address?
           if (addrFromHexFile != userRomStartingAddress) {
             // Jump to user code
-            jumpToUserCode();
+            testJump();
+//            jumpToUserCode();
           } else {
             // Starting address is OK
             LED_ON();
@@ -327,20 +343,6 @@ int main(void) {
         }
       } else  { // Probably end of file
         fwLastLineNumber = receivedLineNumber;
-
-        // Replace their reset vector with our bootloader address
-        // this allows the user to provide their own interrupt vectors
-        // however, the gdb boot code still runs first
-#ifdef GDB_SERIAL_BOOT
-        isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
-      isrTable[7][0x0F] = 0x10;
-
-      isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
-      isrTable[3][0x0F] = 0x80;
-#endif
-
-        isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
-        isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
       }
 
       // Mark line as flashed

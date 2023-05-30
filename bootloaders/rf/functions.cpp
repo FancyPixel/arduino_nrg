@@ -19,7 +19,7 @@ bool readHexLine() {
     if (packet.crc_ok) {
       // Function
       if ((packet.GWAP_FUNCTION) == GWAPFUNCT_STA) {
-        // Break if packet pcode == our pcode
+        // Break if packet pcode != our pcode
         if (!gwap.hasCCPACKETMyProductCode(&packet)) return false;
         // Firmware page received?
         if (packet.GWAP_REGID == REGI_FWVERSION) {
@@ -124,8 +124,17 @@ uint16_t nextNeededLineNumber() {
 void factoryReset() {
   CC430FLASH nvMem;
 
+  // Pointer at the begining of user flash
+  uint16_t userRomStartingAddress = USER_CODE_STARTING_ADDR;
+
   // Erase info memory
   nvMem.eraseSegment((uint8_t *) INFOMEM_CONFIG);
+
+  // Erase user flash
+  while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
+    nvMem.eraseSegment((uint8_t *) userRomStartingAddress);
+    userRomStartingAddress += FLASH_SEGMENT_SIZE;
+  }
 
   for (int i = 0; i < 6; i++) {
     LED_ON();
@@ -171,6 +180,12 @@ bool checkCRC(uint8_t *data, uint8_t len) {
   }
 
   return false;
+}
+
+void testJump() {
+  void (*p)(void);
+  p = (void (*)(void))USER_CODE_STARTING_ADDR;
+  (*p)();
 }
 
 void jumpToUserCode() {
