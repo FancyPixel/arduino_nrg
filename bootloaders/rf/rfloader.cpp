@@ -5,7 +5,6 @@
 
 //#define DEBUG true
 
-//#define WORKING_MODE MODE_4800
 #define WORKING_MODE MODE_38400
 
 extern GWAP gwap;
@@ -13,7 +12,7 @@ extern GWAP gwap;
 extern CCPACKET packet;
 extern bool isVirgin;
 extern uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
-
+extern CC430FLASH flash;
 
 int main(void) {
   bool firstLine = true;
@@ -98,7 +97,6 @@ int main(void) {
     }
   }
 
-  CC430FLASH flash;
   TIMER1A0 timer;
 
   // Init GWAP comms

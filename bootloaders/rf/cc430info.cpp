@@ -1,0 +1,99 @@
+#include "cc430info.h"
+#include "cc430x513x.h"
+
+/**
+ * read
+ * 
+ * Read buffer from info memory
+ *
+ * @param buffer pointer to the buffer where to write the result
+ * @param section info memory section (memory address)
+ * @param position position in section
+ * @pararm length Length to be read
+ *
+ * @return amount of bytes read
+ */
+//uint8_t CC430INFO::read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
+//  if ((position + length) > 128)
+//    return 0;                           // out of range
+//
+//  uint16_t i;
+//  char * flashPtr = (char *) section;   // Initialize Flash pointer
+//  flashPtr += position;
+//
+//  for (i = 0; i < length; i++)
+//    buffer[i] = *flashPtr++;
+//
+//  return length;
+//}
+
+/**
+ * write
+ * 
+ * Write buffer in info memory
+ *
+ * @param buffer array to be written
+ * @param section info memory section (memory address)
+ * @param position position in section
+ * @pararm length Length to be written
+ *
+ * @return amount of bytes copied
+ */
+uint8_t CC430INFO::write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
+  if ((position + length) > 128) {
+    return 0;                           // out of range
+  }
+
+  uint8_t buf[128];
+  uint16_t i, j;
+  char * flashPtr = (char *) section;   // Initialize Flash pointer
+
+  for (i = 0; i < 128; i++) {
+    buf[i] = flashPtr[i];                // Save current contents in temporary buffer
+  }
+
+  __disable_interrupt();                 // 5xx Workaround: Disable global
+                                         // interrupt while erasing
+  if (FCTL3 & LOCKA) {
+    FCTL3 = FWKEY + LOCKA;               // Clear Lock bit and unlock info A section
+  } else {
+    FCTL3 = FWKEY;
+  }
+
+  FCTL1 = FWKEY+ERASE;                   // Set Erase bit
+  *flashPtr = 0;                         // Dummy write to erase Flash seg
+  FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
+
+  for (i = 0; i < 128; i++) {
+    if (i == position) {
+      for (j = 0; j < length; j++) {
+        *flashPtr++ = buffer[j];         // Write byte to flash
+      }
+
+      i += length-1;
+    } else {
+      *flashPtr++ = buf[i];              // Write byte to flash
+    }
+  }
+
+  FCTL1 = FWKEY;                         // Clear WRT bit
+  FCTL3 = FWKEY+LOCK;                    // Set LOCK bit
+
+//  __enable_interrupt();                  // Re-enable interrupts
+
+  return length;
+}
+
+//void waitReady() {
+//  while(FCTL3 & BUSY);
+//}
+
+//void CC430INFO::eraseSegment(uint8_t *memAddress) {
+//  waitReady();
+//  FCTL3 = FWKEY;              // Clear LOCK
+//  FCTL1 = FWKEY | ERASE;      // Enable segment erase
+//  *memAddress = 0;            // Dummy write, erase Segment
+//  waitReady();
+//  FCTL3 = FWKEY | LOCK;       // Done, set LOCK
+//}
+

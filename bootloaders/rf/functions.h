@@ -57,8 +57,10 @@
 
 // Responses from server have to be received before 200 ms after sending the query
 #define RESPONSE_TIMEOUT 500
-#define MAX_SKETCH_LINES 1600
 #define MAX_FAILED_LINE_REQUESTS 3
+
+#define MAX_SKETCH_LINES 1600
+//const uint16_t MAX_SKETCH_LINES = ((USER_CODE_LAST_SEGMENT_ADDR - USER_CODE_STARTING_ADDR) / 16);
 
 // Capabilities
 #define CAPABILITY_2LINES 0x01

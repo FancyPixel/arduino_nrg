@@ -57,28 +57,18 @@ const uint16_t INFOMEM_SECTIO_D        = 0x1800;
 
 #define INFOMEM_CONFIG  INFOMEM_SECTIO_D
 
-/**
- * Stored config
- */
-const uint16_t INFOMEM_FREQ_CHANNEL    = INFOMEM_CONFIG + 0x00;   // 1-byte register
-const uint16_t INFOMEM_NOT_USED        = INFOMEM_CONFIG + 0x01;   // 1-byte register
-const uint16_t INFOMEM_SYNC_WORD       = INFOMEM_CONFIG + 0x02;   // 2-byte register
-const uint16_t INFOMEM_DEVICE_ADDR     = INFOMEM_CONFIG + 0x04;   // 1 or 2 byte register
-const uint16_t INFOMEM_TX_INTERVAL     = INFOMEM_CONFIG + 0x06;   // 2-byte register
-const uint16_t INFOMEM_FIRST_CUSTOM    = INFOMEM_CONFIG + 0x20;
-
-#ifdef SWAP_EXTENDED_ADDRESS
-const uint16_t INFOMEM_DEVICE_ADDRESS  = INFOMEM_DEVICE_ADDR;
-#else
-const uint16_t INFOMEM_DEVICE_ADDRESS  = INFOMEM_DEVICE_ADDR + 1;
-#endif
+#define NVOLAT_SIGNATURE          0x00   // 2-byte register
+#define NVOLAT_FREQ_CHANNEL       0x02   // 1-byte register
+#define NVOLAT_SYNC_WORD          0x03   // 2-byte register
+#define NVOLAT_TX_INTERVAL        0x05   // 2-byte register
+#define NVOLAT_FIRST_CUSTOM       0x20
 
 /**
  * Serial bootloader in BSL flash
  */
-const uint16_t GDB_LOADER_ADDR = 0x1000;          // flash start address for the start of boot loader
-const uint16_t GDB_LOADER_LEN  = 0x600;
-const uint16_t GDB_BOOT_END    = GDB_LOADER_ADDR + GDB_LOADER_LEN - 1;
+//const uint16_t GDB_LOADER_ADDR = 0x1000;          // flash start address for the start of boot loader
+//const uint16_t GDB_LOADER_LEN  = 0x600;
+//const uint16_t GDB_BOOT_END    = GDB_LOADER_ADDR + GDB_LOADER_LEN - 1;
 
 /**
  * Standard flash

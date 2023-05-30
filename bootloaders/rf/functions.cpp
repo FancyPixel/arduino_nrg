@@ -9,6 +9,7 @@ GWAP gwap;
 // Global packet
 CCPACKET packet;
 bool isVirgin = false;
+CC430FLASH flash;
 uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
 
 
@@ -122,17 +123,15 @@ uint16_t nextNeededLineNumber() {
 }
 
 void factoryReset() {
-  CC430FLASH nvMem;
-
   // Pointer at the begining of user flash
   uint16_t userRomStartingAddress = USER_CODE_STARTING_ADDR;
 
   // Erase info memory
-  nvMem.eraseSegment((uint8_t *) INFOMEM_CONFIG);
+  gwap.nvolatToFactoryDefaults();
 
-  // Erase user flash
+  // Erase program flash
   while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
-    nvMem.eraseSegment((uint8_t *) userRomStartingAddress);
+    flash.eraseSegment((uint8_t *) userRomStartingAddress);
     userRomStartingAddress += FLASH_SEGMENT_SIZE;
   }
 
