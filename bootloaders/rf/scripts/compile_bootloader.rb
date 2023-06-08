@@ -54,7 +54,7 @@ end
 sketch_pcode = sketch_match_lines.first.scan(/(?<!\/\/[\s*])\d+/).first.to_i
 
 # TODO: Force recompile
-system "#{RECOMPILE_COMMAND}"
+exit system("#{RECOMPILE_COMMAND}")
 
 =begin
 	# If bootloader's PCODE is different from sketch' PCODE, recompile bootloader with correct PCODE

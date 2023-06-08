@@ -73,20 +73,20 @@ int main(void) {
     counter++;
   }
 
-  // Some fancy blinking for signaling that we're on bootloader
-  for (int j = 0; j < 2; j++) {
-    LED_ON();
-    delayClockCycles(5000L);
-    LED_OFF();
-    delayClockCycles(5000L);
-  }
-
   // Init core
   initCore();
 
 //  delayClockCycles(1000000);
 //  Serial.begin(9600);
 //  delayClockCycles(1000000);
+
+// Some fancy blinking for signaling that we're on bootloader
+  for (int j = 0; j < 5; j++) {
+    LED_ON();
+    delayMicroseconds(50000);
+    LED_OFF();
+    delayMicroseconds(50000);
+  }
 
   // Valid starting address of user code?
   if (userCodeAddr != 0xFFFF) {
@@ -156,7 +156,7 @@ int main(void) {
               isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
               isrTable[3][0x0F] = 0x80;
             #endif
-
+            //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
             // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             //      0 1 2 3 4 5 6 7 8 9 A B C D E F
             isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;

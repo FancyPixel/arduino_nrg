@@ -17,8 +17,9 @@ puts "\n\nCombining RF bootloader and sketch in a single file\n\n"
 source_files_path = ARGV.shift
 build_path = ARGV.shift
 
+HEX_DATA_LINE_LEN = 16
 VECTOR_TABLE_ADDR = 0xFF80
-BOOTLOADER_STARTING_ADDR = "8000"
+BOOTLOADER_STARTING_ADDR = 0x8000
 BOOT_HEX_FILE_PATH = File.expand_path File.join(__dir__, '../', 'rfloader.hex')
 
 SKETCH_FILE_NAMES = Dir[File.join build_path, '*.ino.hex']
@@ -67,11 +68,17 @@ File.read(BOOT_HEX_FILE_PATH).each_line do |line|
     # Time to pad bootloader!
     # Calculate bootloader's end memory address
     boot_end_memory_addr = addr_of_line(combined_file_content.last) + data_length_of_line(combined_file_content.last)
-    pad_length = user_code_starting_addr - boot_end_memory_addr
+    total_pad_length = user_code_starting_addr - boot_end_memory_addr
 
-    padded_line = ":" + pad_length.to_hex_str + boot_end_memory_addr.to_hex_str + '00' + ('FF' * pad_length)
-    padded_line += calculate_crc(padded_line).to_hex_str
-    combined_file_content << padded_line
+    curr_memory_addr = boot_end_memory_addr
+	(total_pad_length / HEX_DATA_LINE_LEN.to_f).ceil.times do |n|
+	  remaining_pad = total_pad_length - (n * HEX_DATA_LINE_LEN)
+	  curr_pad_length = remaining_pad < HEX_DATA_LINE_LEN ? remaining_pad : HEX_DATA_LINE_LEN
+      padded_line = ":" + curr_pad_length.to_hex_str + curr_memory_addr.to_hex_str + '00' + ('FF' * curr_pad_length)
+      padded_line += calculate_crc(padded_line).to_hex_str
+      combined_file_content << padded_line
+      curr_memory_addr += curr_pad_length
+	end
   end
 end
 
@@ -81,13 +88,12 @@ File.read(SKETCH_HEX_FILE_PATH).each_line do |line|
   addr = addr_str.to_i(16)
   if addr >= VECTOR_TABLE_ADDR
     if addr == 0xFFB0
-      # line[-10..-7] = "#{user_code_starting_addr[2..3]}#{user_code_starting_addr[0..1]}"
-      # line[-2..-1] = calculate_crc(line).to_hex_str
+      line[-10..-7] = "#{(user_code_starting_addr & 0xFF).to_hex_str}#{((user_code_starting_addr >> 8) & 0xFF).to_hex_str}"
+      line[-2..-1] = calculate_crc(line).to_hex_str
     end
 
     if addr == 0xFFF0
-      line[-6..-3] = "#{BOOTLOADER_STARTING_ADDR[2..3]}#{BOOTLOADER_STARTING_ADDR[0..1]}"
-      # line[-6..-3] = "#{user_code_starting_addr[2..3]}#{user_code_starting_addr[0..1]}"
+      line[-6..-3] = "#{(BOOTLOADER_STARTING_ADDR & 0xFF).to_hex_str}#{((BOOTLOADER_STARTING_ADDR >> 8) & 0xFF).to_hex_str}"
       line[-2..-1] = calculate_crc(line).to_hex_str
     end
 
