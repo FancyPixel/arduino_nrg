@@ -103,6 +103,8 @@ uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t firmwareVersion, uint16_t li
 // Query firmware line from node with address 1
 bool transmitGwapQueryLine(uint8_t *data);
 
-void testJump();
+void triggerBOR();
+
+void directJump();
 
 #endif //RF_BOOTLOADER_FUNCTIONS_H

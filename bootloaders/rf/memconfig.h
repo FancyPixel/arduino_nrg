@@ -76,7 +76,7 @@ const uint16_t INFOMEM_SECTIO_D        = 0x1800;
 
 const uint16_t FLASH_SEGMENT_SIZE         = 512;      // Each flash segment has a size of 512 bytes
 const uint16_t BOOTLOADER_STARTING_ADDR   = 0x8000;   // Bootloader starting address - matches main memory starting addr. See "CC430F5137_memory_organization.png" side here
-const uint16_t USER_CODE_STARTING_ADDR    = ceil((float)(BOOTLOADER_STARTING_ADDR + BOOTLOADER_CODE_SIZE) / FLASH_SEGMENT_SIZE) * FLASH_SEGMENT_SIZE;   // Flash starting address for user code
+const uint16_t USER_CODE_STARTING_ADDR    = ceil((float)(BOOTLOADER_STARTING_ADDR + BOOTLOADER_CODE_SIZE) / (float)FLASH_SEGMENT_SIZE) * FLASH_SEGMENT_SIZE;   // Flash starting address for user code
 const uint16_t USER_CODE_LAST_SEGMENT_ADDR = 0xFDFF;
 
 const uint16_t VECTOR_TABLE_SEGMENT = 0xFE00;     // flash segment address containing isr vectors

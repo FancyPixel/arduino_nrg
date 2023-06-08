@@ -1,6 +1,6 @@
 SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 PRODUCT_TYPES_PATH=$SCRIPT_PATH/product_types
-LAST_MADE_FOR_PATH=${SCRIPT_PATH}/last_made_for
+LAST_FLASHED_FOR_PATH=${SCRIPT_PATH}/last_flashed_for
 
 declare -a mote_types=("modem" "bollard" "forklift" "gate" "ame")
 
@@ -41,12 +41,12 @@ cp ${PRODUCT_TYPES_PATH}/${MOTE_TYPE}.h ${SCRIPT_PATH}/product.h
 
 export SERPORT=${SERIAL_PORT}
 
-last_made_for=$(cat $LAST_MADE_FOR_PATH)
-if [ "$last_made_for" != "$MOTE_TYPE" ]
+last_flashed_for=$(cat $LAST_FLASHED_FOR_PATH)
+if [ "$last_flashed_for" != "$MOTE_TYPE" ]
 then
   make clean
   make
-  echo $MOTE_TYPE > $LAST_MADE_FOR_PATH
+  echo $MOTE_TYPE > $LAST_FLASHED_FOR_PATH
 fi
 
 make bsl-flash

@@ -52,7 +52,7 @@ uint8_t CC430INFO::write(uint8_t *buffer, uint16_t section, uint16_t position, u
     buf[i] = flashPtr[i];                // Save current contents in temporary buffer
   }
 
-  __disable_interrupt();                 // 5xx Workaround: Disable global
+//  __disable_interrupt();                 // 5xx Workaround: Disable global
                                          // interrupt while erasing
   if (FCTL3 & LOCKA) {
     FCTL3 = FWKEY + LOCKA;               // Clear Lock bit and unlock info A section

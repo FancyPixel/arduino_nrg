@@ -1,20 +1,31 @@
-#! /usr/bin/env ruby
+require 'bundler/setup'
+Bundler.require
 
 UROM_START = 0x8000
 UROM_END = 0xFDFF
 FLASH_SEGMENT_SIZE = 0x200  # 512 bytes
 
-HEX_FILE_PATH = File.expand_path './rfloader.hex'
-ELF_FILE_PATH = File.expand_path './rfloader.elf'
-CODESIZE_FILE_PATH = File.expand_path './codesize.h'
-MEMORY_RF_FILE_PATH = File.expand_path '../../ldscript/memory_rf.x'
-BOARDS_FILE_PATH = File.expand_path '../../boards.txt'
+HEX_FILE_PATH = File.expand_path File.join(__dir__, '../', 'rfloader.hex')
+ELF_FILE_PATH = File.expand_path File.join(__dir__, '../', 'rfloader.elf')
+CODESIZE_FILE_PATH = File.expand_path File.join(__dir__, '../', 'codesize.h')
+MEMORY_RF_FILE_PATH = File.expand_path File.join(__dir__, '../../../', 'ldscript/memory_rf.x')
+BOARDS_FILE_PATH = File.expand_path File.join(__dir__, '../../../', 'boards.txt')
 
 PROGRAM_DATA_SIZE_REGEX = /^(?:\.text|\.data|\.bootloader)\s+([0-9]+).*/
 MEMORY_SIZE_REGEX = /^(?:\.data|\.bss|\.noinit)\s+([0-9]+).*/
 CODESIZE_REGEX =/BOOTLOADER_CODE_SIZE\s(\d+)/
 MEMORY_RF_UROM_REGEX = /^\s*urom\s\(rx\).+$/
 BOARDS_NRG2_MAX_SIZE_REGEX = /^nrg2.upload.maximum_size=\d+$/
+
+class Numeric
+  def to_hex_str
+    n = to_s(16).upcase
+    if n.length.odd?
+      n = "0#{n}"
+    end
+    n
+  end
+end
 
 PROGRAM_SIZE_COMMAND = "~/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/msp430-size -A %s"
 RECOMPILE_COMMAND = "make clean && make"
@@ -55,7 +66,7 @@ urom_length = UROM_END - urom_new_origin
 
 puts "\n\n\e[32m *** PROGRAM INFO *** \e[0m\n\n"
 puts "\e[33m - Bootloader size:\e[0m #{program_data_size} bytes\n\n"
-puts "\e[33m - Concentrator's startFirmwareAddress:\e[0m #{urom_new_origin.to_s(16)}\n\n"
+puts "\e[33m - Concentrator's startFirmwareAddress:\e[0m #{urom_new_origin.to_hex_str}\n\n"
 
 
 ### IF NECESSARY, UPDATE >BOOTLOADER_CODE_SIZE<  #define and recompile
@@ -81,7 +92,7 @@ if prev_bootloader_code_size != program_data_size
   puts " - Updating\e[33m memory_rf.x\e[0m \e[32murom entry\e[0m\n"
 
   memory_rf_file_content = File.read MEMORY_RF_FILE_PATH
-  memory_rf_file_content[MEMORY_RF_UROM_REGEX] = MEMORY_RF_UROM_LINE_TEMPLATE % [ "0x#{urom_new_origin.to_s(16)}", "0x#{urom_length.to_s(16)}", urom_length ]
+  memory_rf_file_content[MEMORY_RF_UROM_REGEX] = MEMORY_RF_UROM_LINE_TEMPLATE % [ "0x#{urom_new_origin.to_hex_str}", "0x#{urom_length.to_hex_str}", urom_length ]
 
   file = File.open(MEMORY_RF_FILE_PATH, 'w')
   file.write memory_rf_file_content

@@ -8,7 +8,6 @@
 GWAP gwap;
 // Global packet
 CCPACKET packet;
-bool isVirgin = false;
 CC430FLASH flash;
 uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
 
@@ -142,7 +141,7 @@ void factoryReset() {
     delayClockCycles(1000000L);
   }
 
-  isVirgin = true;
+//  justFactoryReset = true;
 }
 
 uint16_t getLineNumber(uint8_t *data) {
@@ -181,13 +180,7 @@ bool checkCRC(uint8_t *data, uint8_t len) {
   return false;
 }
 
-void testJump() {
-  void (*p)(void);
-  p = (void (*)(void))USER_CODE_STARTING_ADDR;
-  (*p)();
-}
-
-void jumpToUserCode() {
+void triggerBOR() {
   // Exit upgrade mode
   uint8_t state = (uint8_t) SYSTATE_RESTART;
   TRANSMIT_GWAP_STATUS_STATE(state);
@@ -197,6 +190,16 @@ void jumpToUserCode() {
   PMMCTL0_H = 0x00;
 
   while(1);
+}
+
+void directJump() {
+  void (*p)(void);
+  p = (void (*)(void))USER_CODE_STARTING_ADDR;
+  (*p)();
+}
+
+void jumpToUserCode() {
+  directJump();
 }
 
 void delayClockCycles(register uint32_t n) {

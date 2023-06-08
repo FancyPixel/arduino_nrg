@@ -62,25 +62,4 @@ upload:
 	java -jar $(JAVA_BSL) /var/folders/8s/6k3r4rt57r38rl8r4ngd6j780000gn/T/arduino_build_414041/ntc.ino.hex $(SERPORT) --verif-off --verbose-on
 
 info:
-	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@echo "********           WARNING !!!           ********"
-	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@echo "********    DO NOT FORGET TO UPDATE      ********"
-	@echo "********   FACTORY RESET  VECTORS ON     ********"
-	@echo "********  -- EVERY MOTE SOURCE CODE --   ********"
-	@echo "********  ACCORDING TO THIS BOOTLOADER   ********"
-	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@echo "********      YOU HAVE TO CONSIDER       ********"
-	@echo "********  THE LAST 4th and 3rd LINES OF  ********"
-	@echo "********   THE HEX FILE RESULTING FROM   ********"
-	@echo "********       THIS COMPILATION          ********"
-	@echo "********                                 ********"
-	@echo "********   HERE UNDER ARE THE VECTORS    ********"
-	@echo "******** READY TO COPY PREPARED FOR YOU! ********"
-	@echo "********                                 ********"
-	@./post_compile.rb
+	@ruby scripts/post_compile.rb
