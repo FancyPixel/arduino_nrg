@@ -20,7 +20,7 @@ int main(void) {
   uint8_t dataLineLength = 0, currentLineLength = 0;
   // Pointer to line buffer
   uint8_t *dataLine;
-  uint8_t *currentLine = (uint8_t*)malloc(sizeof(uint8_t) * (FW_LINE_LEN_BYTES_COUNT + 1));
+//  uint8_t *currentLine = (uint8_t*)malloc(sizeof(uint8_t) * (FW_LINE_LEN_BYTES_COUNT + 1));
   uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
   // User code address
   uint16_t userCodeAddr;
@@ -271,7 +271,7 @@ int main(void) {
     finishedParsing = false;
     // While we still have lines to read...
     while(!finishedParsing && (dataLineLength > 0)) {
-      memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
+//      memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
       if (parsingFirstLine) {
         currentLineLength = dataLine[0];
 
@@ -287,13 +287,11 @@ int main(void) {
       }
 
       // Copy data line to currentLine
-      memcpy(currentLine, dataLine, currentLineLength);
-      dataLine += currentLineLength; // Jump to first byte of next line
-      dataLineLength -= currentLineLength;
+//      memcpy(currentLine, dataLine, currentLineLength);
 
-      if (TYPE_OF_RECORD(currentLine) == RECTYPE_DATA) {
+      if (TYPE_OF_RECORD(dataLine) == RECTYPE_DATA) {
         // Get target address
-        uint16_t addrFromHexFile = getTargetAddress(currentLine);
+        uint16_t addrFromHexFile = getTargetAddress(dataLine);
 
         // Only for the first line received
         if (firstLine) {
@@ -316,19 +314,22 @@ int main(void) {
 
           for (uint8_t i = 0; i < 16; i++) {
             if (i < currentLineLength - 3)
-              isrTable[row][i] = currentLine[i + 3];
+              isrTable[row][i] = dataLine[i + 3];
             else
               isrTable[row][i] = 0xFF;
           }
         } else {
           // Flash firmware line
           LED_ON();
-          flash.write((uint8_t *) addrFromHexFile, currentLine + 3, currentLineLength - 4);
+          flash.write((uint8_t *) addrFromHexFile, dataLine + 3, currentLineLength - 4);
           LED_OFF();
         }
-      } else if ((TYPE_OF_RECORD(currentLine) == RECTYPE_EOF)) { // End of file
+      } else if ((TYPE_OF_RECORD(dataLine) == RECTYPE_EOF)) { // End of file
         fwLastLineNumber = receivedLineNumber;
       }
+
+      dataLine += currentLineLength; // Jump to first byte of next line
+      dataLineLength -= currentLineLength;
 
       // Mark line as flashed
       markLineAsFlashed(receivedLineNumber);
