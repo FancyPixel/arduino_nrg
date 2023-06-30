@@ -20,7 +20,6 @@ int main(void) {
   uint8_t dataLineLength = 0, currentLineLength = 0;
   // Pointer to line buffer
   uint8_t *dataLine;
-//  uint8_t *currentLine = (uint8_t*)malloc(sizeof(uint8_t) * (FW_LINE_LEN_BYTES_COUNT + 1));
   uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
   // User code address
   uint16_t userCodeAddr;
@@ -271,7 +270,6 @@ int main(void) {
     finishedParsing = false;
     // While we still have lines to read...
     while(!finishedParsing && (dataLineLength > 0)) {
-//      memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
       if (parsingFirstLine) {
         currentLineLength = dataLine[0];
 
@@ -285,9 +283,6 @@ int main(void) {
         finishedParsing = true;
         receivedLineNumber++;
       }
-
-      // Copy data line to currentLine
-//      memcpy(currentLine, dataLine, currentLineLength);
 
       if (TYPE_OF_RECORD(dataLine) == RECTYPE_DATA) {
         // Get target address
