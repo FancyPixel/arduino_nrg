@@ -14,7 +14,7 @@ end
 code_changed = !`git status --porcelain`.empty?
 unless code_changed
   puts "Bootloader code did not change, NOT recompiling"
-  exit 1
+  exit 0
 end
 
 puts "\n\nCompiling RF bootloader\n\n"
