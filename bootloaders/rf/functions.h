@@ -60,51 +60,28 @@
 #define MAX_FAILED_LINE_REQUESTS 3
 
 #define MAX_SKETCH_LINES 1600
-//const uint16_t MAX_SKETCH_LINES = ((USER_CODE_LAST_SEGMENT_ADDR - USER_CODE_STARTING_ADDR) / 16);
 
 // Capabilities
 #define CAPABILITY_2LINES 0x01
 
-
-void initCore(void);
-
-bool readHexLine();
-
-bool hasLineBeenFlashed(uint16_t lineNumber);
-
-void markLineAsFlashed(uint16_t lineNumber);
-
-uint16_t nextNeededLineNumber();
-
-void factoryReset();
-
-uint16_t getLineNumber(uint8_t *data);
-
-uint16_t getTargetAddress(uint8_t *line);
-
-uint16_t getFwVersion(uint8_t *line);
-
 bool checkCRC(uint8_t *data, uint8_t len);
-
-void sleep(void);
-
-void jumpToUserCode(void);
-
-void delayClockCycles(register uint32_t n);
-
-uint32_t random(uint32_t min_num, uint32_t max_num);
-
-void ledBlink(uint8_t times);
-
-uint16_t getCapabilities();
-
 uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities);
-
-// Query firmware line from node with address 1
-bool transmitGwapQueryLine(uint8_t *data);
-
-void triggerBOR();
-
+void delayClockCycles(register uint32_t n);
 void directJump();
+void eraseUROM();
+void factoryReset();
+uint16_t getCapabilities();
+uint16_t getFwVersion(uint8_t *line);
+uint16_t getLineNumber(uint8_t *data);
+uint16_t getTargetAddress(uint8_t *line);
+bool hasLineBeenFlashed(uint16_t lineNumber);
+void initCore(void);
+void jumpToUserCode(void);
+void markLineAsFlashed(uint16_t lineNumber);
+uint16_t nextNeededLineNumber();
+uint32_t random(uint32_t min_num, uint32_t max_num);
+bool readHexLine();
+bool transmitGwapQueryLine(uint8_t *data);
+void triggerBOR();
 
 #endif //RF_BOOTLOADER_FUNCTIONS_H

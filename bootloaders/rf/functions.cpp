@@ -11,25 +11,129 @@ CCPACKET packet;
 CC430FLASH flash;
 uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
 
+bool checkCRC(uint8_t *data, uint8_t len) {
+  uint8_t crc = 0;
 
-bool readHexLine() {
-  // Any packet waiting to be read?
-  if (gwap.radio.receiveData(&packet) > 0) {
-    // Is CRC OK?
-    if (packet.crc_ok) {
-      // Function
-      if ((packet.GWAP_FUNCTION) == GWAPFUNCT_STA) {
-        // Break if packet pcode != our pcode
-        if (!gwap.hasCCPACKETMyProductCode(&packet)) return false;
-        // Firmware page received?
-        if (packet.GWAP_REGID == REGI_FWVERSION) {
-          return true;
-        }
-      }
-    }
+  for (uint8_t i = 0; i < len - 1; i++) {
+    crc += data[i];
+  }
+
+  if (crc == data[len - 1]) {
+    return true;
   }
 
   return false;
+}
+
+uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t fwVer, uint16_t lineNum, uint16_t capab) {
+  buf[0] = (fwVer >> 8) & 0xFF;
+  buf[1] = fwVer & 0xFF;
+  buf[2] = (lineNum >> 8) & 0xFF;
+  buf[3] = lineNum & 0xFF;
+  buf[4] = (capab >> 8) & 0xFF;
+  buf[5] = capab & 0xFF;
+
+  return buf;
+}
+
+void delayClockCycles(register uint32_t n) {
+  __asm__ __volatile__ (
+          "1: \n"
+          " dec        %[n] \n"
+          " jne        1b \n"
+          :[n] "+r"(n));
+}
+
+void directJump() {
+  void (*p)(void);
+  p = (void (*)(void))USER_CODE_STARTING_ADDR;
+  (*p)();
+}
+
+void eraseUROM() {
+  // Point at the begining of user flash
+  uint16_t currentUROMSegment = USER_CODE_STARTING_ADDR;
+
+  LED_ON();
+  while (currentUROMSegment < VECTOR_TABLE_SEGMENT) {
+    flash.eraseSegment((uint8_t *) currentUROMSegment);
+    currentUROMSegment += FLASH_SEGMENT_SIZE;
+  }
+  LED_OFF();
+}
+
+void factoryReset() {
+  // Erase info memory
+  gwap.nvolatToFactoryDefaults();
+
+  // Erase UROM
+  eraseUROM();
+
+  // Erase VECTOR_TABLE_SEGMENT
+  flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+
+  // Set bootloader's reset vector address
+  uint8_t reset_vector[] = { (BOOTLOADER_STARTING_ADDR & 0xFF), ((BOOTLOADER_STARTING_ADDR >> 8) & 0xFF) };
+  flash.write((uint8_t *)GDB_BOOT_RESET_VECTOR,  reset_vector, sizeof(reset_vector));
+
+  // Build and write BOOTLOADER's VECTOR TABLE
+//  uint8_t row[0x10];
+//  uint16_t currentISRVectorAddr = VECTOR_TABLE_ADDR;
+//  for (uint8_t i = 0; i < 8; i ++) {
+//    LED_ON();
+//    if (i < 4) {
+//      memset(row, 0xFF, 0x10);
+//      if (i == 3) {
+//        row[0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
+//        row[0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
+//      }
+//    } else {
+////      memcpy(row, isrVector_FFC0, 0x10);
+//    }
+//    if (i == 7) {
+//      row[0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
+//      row[0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
+//    }
+//
+//    flash.write((uint8_t *)currentISRVectorAddr, row, sizeof(row));
+//    currentISRVectorAddr += 0x10;
+//    LED_OFF();
+//  }
+}
+
+uint16_t getCapabilities() {
+  uint16_t capabilities = 0;
+  capabilities |= CAPABILITY_2LINES;
+  return capabilities;
+}
+
+uint16_t getFwVersion(uint8_t *line) {
+  uint16_t version = ((uint16_t)line[GWAP_DATA_HEAD_LEN] << 8) | line[GWAP_DATA_HEAD_LEN + 1];
+
+  return version;
+}
+
+uint16_t getLineNumber(uint8_t *data) {
+  uint16_t lineNb = data[0];
+  lineNb <<= 8;
+  lineNb |= data[1];
+
+  return lineNb;
+}
+
+uint16_t getTargetAddress(uint8_t *line) {
+  uint16_t address = line[0];
+  address <<= 8;
+  address |= line[1];
+
+  return address;
+}
+
+// Return @true if the line has already been flashed
+bool hasLineBeenFlashed(uint16_t lineNumber) {
+  uint16_t index = lineNumber / 8;
+  uint8_t mask = 1 << (lineNumber % 8);
+  return (receivedLines[index] & mask) != 0;
 }
 
 void initCore() {
@@ -92,11 +196,8 @@ void initCore() {
   PJDIR = 0xFF;
 }
 
-// Return @true if the line has already been flashed
-bool hasLineBeenFlashed(uint16_t lineNumber) {
-  uint16_t index = lineNumber / 8;
-  uint8_t mask = 1 << (lineNumber % 8);
-  return (receivedLines[index] & mask) != 0;
+void jumpToUserCode() {
+  directJump();
 }
 
 // Mark a line as already flashed
@@ -121,63 +222,32 @@ uint16_t nextNeededLineNumber() {
   return MAX_SKETCH_LINES;
 }
 
-void factoryReset() {
-  // Pointer at the begining of user flash
-  uint16_t userRomStartingAddress = USER_CODE_STARTING_ADDR;
-
-  // Erase info memory
-  gwap.nvolatToFactoryDefaults();
-
-  // Erase program flash
-  while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
-    flash.eraseSegment((uint8_t *) userRomStartingAddress);
-    userRomStartingAddress += FLASH_SEGMENT_SIZE;
-  }
-
-  for (int i = 0; i < 6; i++) {
-    LED_ON();
-    delayClockCycles(1000000L);
-    LED_OFF();
-    delayClockCycles(1000000L);
-  }
-
-//  justFactoryReset = true;
+uint32_t random(uint32_t min_num, uint32_t max_num) {
+  return rand() % (max_num + 1 - min_num) + min_num;
 }
 
-uint16_t getLineNumber(uint8_t *data) {
-  uint16_t lineNb = data[0];
-  lineNb <<= 8;
-  lineNb |= data[1];
-
-  return lineNb;
-}
-
-uint16_t getTargetAddress(uint8_t *line) {
-  uint16_t address = line[0];
-  address <<= 8;
-  address |= line[1];
-
-  return address;
-}
-
-uint16_t getFwVersion(uint8_t *line) {
-  uint16_t version = ((uint16_t)line[GWAP_DATA_HEAD_LEN] << 8) | line[GWAP_DATA_HEAD_LEN + 1];
-
-  return version;
-}
-
-bool checkCRC(uint8_t *data, uint8_t len) {
-  uint8_t crc = 0;
-
-  for (uint8_t i = 0; i < len - 1; i++) {
-    crc += data[i];
-  }
-
-  if (crc == data[len - 1]) {
-    return true;
+bool readHexLine() {
+  // Any packet waiting to be read?
+  if (gwap.radio.receiveData(&packet) > 0) {
+    // Is CRC OK?
+    if (packet.crc_ok) {
+      // Function
+      if ((packet.GWAP_FUNCTION) == GWAPFUNCT_STA) {
+        // Break if packet pcode != our pcode
+        if (!gwap.hasCCPACKETMyProductCode(&packet)) return false;
+        // Firmware page received?
+        if (packet.GWAP_REGID == REGI_FWVERSION) {
+          return true;
+        }
+      }
+    }
   }
 
   return false;
+}
+
+bool transmitGwapQueryLine(uint8_t *data) {
+  return gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);
 }
 
 void triggerBOR() {
@@ -190,61 +260,4 @@ void triggerBOR() {
   PMMCTL0_H = 0x00;
 
   while(1);
-}
-
-void directJump() {
-  void (*p)(void);
-  p = (void (*)(void))USER_CODE_STARTING_ADDR;
-  (*p)();
-}
-
-void jumpToUserCode() {
-  directJump();
-}
-
-void delayClockCycles(register uint32_t n) {
-  __asm__ __volatile__ (
-          "1: \n"
-          " dec        %[n] \n"
-          " jne        1b \n"
-          :[n] "+r"(n));
-}
-
-uint32_t random(uint32_t min_num, uint32_t max_num) {
-  return rand() % (max_num + 1 - min_num) + min_num;
-}
-
-void ledBlink(uint8_t times) {
-  register uint32_t cycles = 200000000L;
-  uint8_t delayTimes = 2;
-
-  uint8_t i, j;
-  for (i = 0; i < times; i++) {
-    LED_ON();
-    for (j = 0; j < delayTimes; j++) { delayClockCycles(cycles); }
-    LED_OFF();
-    for (j = 0; j < delayTimes; j++) { delayClockCycles(cycles); }
-  }
-}
-
-
-uint16_t getCapabilities() {
-  uint16_t capabilities = 0;
-  capabilities |= CAPABILITY_2LINES;
-  return capabilities;
-}
-
-uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t fwVer, uint16_t lineNum, uint16_t capab) {
-  buf[0] = (fwVer >> 8) & 0xFF;
-  buf[1] = fwVer & 0xFF;
-  buf[2] = (lineNum >> 8) & 0xFF;
-  buf[3] = lineNum & 0xFF;
-  buf[4] = (capab >> 8) & 0xFF;
-  buf[5] = capab & 0xFF;
-
-  return buf;
-}
-
-bool transmitGwapQueryLine(uint8_t *data) {
-  return gwap.sendPacket((uint8_t)GWAPFUNCT_QRY, (uint8_t)REGI_FWVERSION, data, 6);
 }

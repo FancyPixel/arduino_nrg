@@ -22,18 +22,17 @@ int main(void) {
   uint8_t *dataLine;
   uint8_t *currentLine = (uint8_t*)malloc(sizeof(uint8_t) * (FW_LINE_LEN_BYTES_COUNT + 1));
   uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
-  // ISR vector table
-  uint8_t isrTable[8][16];
   // User code address
   uint16_t userCodeAddr;
   bool correctLineReceived = false;
   uint16_t firmwareVersion = 0xFFFF;
   bool requestLine = true, parsingFirstLine = true, finishedParsing = false;
   uint16_t _fwVersion = 0xFFFF; // This must be here
-  uint8_t status, bytes, i;
   uint16_t failedLineRequests = 0;
   uint16_t receivedLineNumber = 0;
-  uint16_t neededLineNum, fwLastLineNumber = 0xFFFE;\
+  uint16_t neededLineNum, fwLastLineNumber = 0xFFFE;
+  // ISR vector table
+  uint8_t isrTable[8][16];
 
   /*
    * *** IMPORTANT ***
@@ -50,15 +49,13 @@ int main(void) {
     flashMorseString("start\n");
   #endif
 
-  // This flag will tell us whether wireless bootloader needs to start or not
-  bool *ptr1;
-  ptr1 = (bool *) RAM_END_ADDRESS;  // Memory address at the end of the stack
-  bool runUserCode = *ptr1;         // Read value. If "false" it means we're coming from sketch space
-
-  // Read user code starting address
-  uint16_t *ptr2;
-  ptr2 = (uint16_t *) USER_RESET_VECTOR;
-  userCodeAddr = *ptr2;
+  // Some fancy blinking for signaling that we're on bootloader
+  for (uint8_t j = 0; j < 5; j++) {
+    LED_ON();
+    delayClockCycles(5000);
+    LED_OFF();
+    delayClockCycles(5000);
+  }
 
   // Disable interrupts
   __disable_interrupt();
@@ -76,17 +73,20 @@ int main(void) {
   // Init core
   initCore();
 
+  // Give core some more time
+  delayMicroseconds(50000);
+
 //  delayClockCycles(1000000);
 //  Serial.begin(9600);
 //  delayClockCycles(1000000);
 
-// Some fancy blinking for signaling that we're on bootloader
-  for (int j = 0; j < 5; j++) {
-    LED_ON();
-    delayMicroseconds(50000);
-    LED_OFF();
-    delayMicroseconds(50000);
-  }
+  // Read user code starting address
+  uint16_t *ptr2 = (uint16_t *) USER_RESET_VECTOR;
+  userCodeAddr = *ptr2;
+
+  // This flag will tell us whether wireless bootloader needs to start or not
+  bool *ptr1 = (bool *) RAM_END_ADDRESS;  // Memory address at the end of the stack
+  bool runUserCode = *ptr1;         // Read value. If "false" it means we're coming from sketch space
 
   // Valid starting address of user code?
   if (userCodeAddr != 0xFFFF) {
@@ -119,8 +119,8 @@ int main(void) {
       // Start timer
       timer.start(RESPONSE_TIMEOUT);
       while (!timer.timeout()) {
-        status = ReadSingleReg(PKTSTATUS);
-        bytes = ReadSingleReg(RXBYTES);
+        uint8_t status = ReadSingleReg(PKTSTATUS);
+        uint8_t bytes = ReadSingleReg(RXBYTES);
 
         // Poll PKSTATUS and number of bytes in the Rx FIFO
         if ((status & 0x01) && bytes) {
@@ -158,15 +158,16 @@ int main(void) {
             #endif
             //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
             // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            //      0 1 2 3 4 5 6 7 8 9 A B C D E F
+            // FFB  0 1 2 3 4 5 6 7 8 9 A B C D E F
+            //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
             isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
             isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
             isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
             isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
 
             // Write ISR table
-            for (i = 0; i < 8; i++) {
-              flash.write((uint8_t *) (VECTOR_TABLE_ADDR + i * 0x10), isrTable[i], sizeof(isrTable[i]));
+            for (uint8_t i = 0; i < sizeof(isrTable); i++) {
+              flash.write((uint8_t *)VECTOR_TABLE_ADDR + (i * sizeof(isrTable[i])), isrTable[i], sizeof(isrTable[i]));
             }
 
             jumpToUserCode();
@@ -270,7 +271,6 @@ int main(void) {
     finishedParsing = false;
     // While we still have lines to read...
     while(!finishedParsing && (dataLineLength > 0)) {
-      // TODO: memset as 0x00 ???
       memset(currentLine, 0xFF, FW_LINE_LEN_BYTES_COUNT + 1);
       if (parsingFirstLine) {
         currentLineLength = dataLine[0];
@@ -288,7 +288,7 @@ int main(void) {
 
       // Copy data line to currentLine
       memcpy(currentLine, dataLine, currentLineLength);
-      dataLine += currentLineLength; // Jump to first byte of current line
+      dataLine += currentLineLength; // Jump to first byte of next line
       dataLineLength -= currentLineLength;
 
       if (TYPE_OF_RECORD(currentLine) == RECTYPE_DATA) {
@@ -304,13 +304,8 @@ int main(void) {
           } else {
             firstLine = false;
             // Starting address is OK
-            LED_ON();
             // Erase user flash
-            while (userRomStartingAddress < USER_CODE_LAST_SEGMENT_ADDR) {
-              flash.eraseSegment((uint8_t *) userRomStartingAddress);
-              userRomStartingAddress += FLASH_SEGMENT_SIZE;
-            }
-            LED_OFF();
+            eraseUROM();
           }
         }
 
@@ -319,7 +314,7 @@ int main(void) {
           uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
           row /= 0x10;
 
-          for (i = 0; i < 16; i++) {
+          for (uint8_t i = 0; i < 16; i++) {
             if (i < currentLineLength - 3)
               isrTable[row][i] = currentLine[i + 3];
             else

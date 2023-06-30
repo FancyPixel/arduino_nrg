@@ -5,9 +5,16 @@ Bundler.require
 
 must_execute = ARGV.shift == 'true'
 
-# Break if we've not enabled "Wireless bootloader" ARDUINO IDE's option
+# Break if we've not enabled "Combine bootloader and Sketch" ARDUINO IDE's option
 unless must_execute
   exit 0
+end
+
+# Check if code changed. Recompile if needed
+code_changed = !`git status --porcelain`.empty?
+unless code_changed
+  puts "Bootloader code did not change, NOT recompiling"
+  exit 1
 end
 
 puts "\n\nCompiling RF bootloader\n\n"
