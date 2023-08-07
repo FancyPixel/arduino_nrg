@@ -29,6 +29,8 @@
 #define MEMCONFIG_H_
 
 #include "datatypes.h"
+#include "codesize.h"
+#include <math.h>
 
 /*
  * These are chip specific values that indicate the start
@@ -81,9 +83,11 @@ const uint16_t GDB_BOOT_END    = GDB_LOADER_ADDR + GDB_LOADER_LEN - 1;
 /**
  * Standard flash
  */
-const uint16_t USER_ROMADDR     = 0xA000;          // flash start address for user code
-const uint16_t USER_ROM_LEN     = 0x5800;
-const uint16_t USER_END_ROMADDR = USER_ROMADDR + USER_ROM_LEN - 1;
+
+const uint16_t FLASH_SEGMENT_SIZE         = 512;      // Each flash segment has a size of 512 bytes
+const uint16_t BOOTLOADER_STARTING_ADDR   = 0x8000;   // Bootloader starting address - matches main memory starting addr. See "CC430F5137_memory_organization.png" side here
+const uint16_t USER_CODE_STARTING_ADDR    = ceil((float)(BOOTLOADER_STARTING_ADDR + BOOTLOADER_CODE_SIZE) / FLASH_SEGMENT_SIZE) * FLASH_SEGMENT_SIZE;   // Flash starting address for user code
+const uint16_t USER_CODE_LAST_SEGMENT_ADDR = 0xFDFF;
 
 const uint16_t VECTOR_TABLE_SEGMENT = 0xFE00;     // flash segment address containing isr vectors
 const uint16_t VECTOR_TABLE_ADDR = 0xFF80;        // Starting address containing isr vectors

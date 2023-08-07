@@ -1,16 +1,12 @@
 
 # Configure serial port and path to the toolchain, acording to your settings
-#SERPORT = /dev/tty.usbserial-A50285BI
-#SERPORT = /dev/tty.usbserial
-
-#SERPORT = /dev/tty.usbserial-AR0JVCRJ
 SERPORT ?= /dev/tty.usbserial-DA013RBN
 ARDUINO_ROOT = ~/Library/Arduino15
 TOOLCHAIN = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/msp430-
 JAVA_BSL = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/java-bsl/1.0.0/BsLoader.jar
 
 MCU = cc430f5137
-SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp # utils.cpp
+SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp functions.cpp # utils.cpp
 
 IDIR = -I../../../../tools/msp430/msp430/include
 
@@ -70,8 +66,8 @@ info:
 	@echo "********                                 ********"
 	@echo "********                                 ********"
 	@echo "********    DO NOT FORGET TO UPDATE      ********"
-	@echo "********     FACTORY RESET VECTORS       ********"
-	@echo "********    ON  -- BOLLARD --  CODE      ********"
+	@echo "********   FACTORY RESET  VECTORS ON     ********"
+	@echo "********  -- EVERY MOTE SOURCE CODE --   ********"
 	@echo "********  ACCORDING TO THIS BOOTLOADER   ********"
 	@echo "********                                 ********"
 	@echo "********                                 ********"
@@ -80,7 +76,7 @@ info:
 	@echo "********   THE HEX FILE RESULTING FROM   ********"
 	@echo "********       THIS COMPILATION          ********"
 	@echo "********                                 ********"
+	@echo "********   HERE UNDER ARE THE VECTORS    ********"
+	@echo "******** READY TO COPY PREPARED FOR YOU! ********"
 	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@echo "********                                 ********"
-	@ls -l rfloader.hex
+	@./post_compile.rb

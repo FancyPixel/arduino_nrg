@@ -62,6 +62,8 @@ class CC430INFO
      * @return amount of bytes copied
      */
     uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length);
+
+    void eraseSegment(uint8_t *memAddress);
 };
 
 #endif
