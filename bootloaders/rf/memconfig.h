@@ -46,52 +46,34 @@
 /**
  * RAM memory
  */
-const uint16_t RAM_END_ADDRESS         = 0x2BFF;
+const uint16_t RAM_END_ADDRESS   = 0x2BFF;
 /**
  * INFO MEMORY
  */
-const uint16_t INFOMEM_SECTIO_A        = 0x1980;
-const uint16_t INFOMEM_SECTIO_B        = 0x1900;
-const uint16_t INFOMEM_SECTIO_C        = 0x1880;
-const uint16_t INFOMEM_SECTIO_D        = 0x1800;
+const uint16_t INFOMEM_SECTIO_A  = 0x1980;
+const uint16_t INFOMEM_SECTIO_B  = 0x1900;
+const uint16_t INFOMEM_SECTIO_C  = 0x1880;
+const uint16_t INFOMEM_SECTIO_D  = 0x1800;
 
 #define INFOMEM_CONFIG  INFOMEM_SECTIO_D
 
-/**
- * Stored config
- */
-const uint16_t INFOMEM_FREQ_CHANNEL    = INFOMEM_CONFIG + 0x00;   // 1-byte register
-const uint16_t INFOMEM_NOT_USED        = INFOMEM_CONFIG + 0x01;   // 1-byte register
-const uint16_t INFOMEM_SYNC_WORD       = INFOMEM_CONFIG + 0x02;   // 2-byte register
-const uint16_t INFOMEM_DEVICE_ADDR     = INFOMEM_CONFIG + 0x04;   // 1 or 2 byte register
-const uint16_t INFOMEM_TX_INTERVAL     = INFOMEM_CONFIG + 0x06;   // 2-byte register
-const uint16_t INFOMEM_FIRST_CUSTOM    = INFOMEM_CONFIG + 0x20;
-
-#ifdef SWAP_EXTENDED_ADDRESS
-const uint16_t INFOMEM_DEVICE_ADDRESS  = INFOMEM_DEVICE_ADDR;
-#else
-const uint16_t INFOMEM_DEVICE_ADDRESS  = INFOMEM_DEVICE_ADDR + 1;
-#endif
-
-/**
- * Serial bootloader in BSL flash
- */
-const uint16_t GDB_LOADER_ADDR = 0x1000;          // flash start address for the start of boot loader
-const uint16_t GDB_LOADER_LEN  = 0x600;
-const uint16_t GDB_BOOT_END    = GDB_LOADER_ADDR + GDB_LOADER_LEN - 1;
+#define NVOLAT_SIGNATURE      0x00   // 2-byte register
+#define NVOLAT_FREQ_CHANNEL   0x02   // 1-byte register
+#define NVOLAT_SYNC_WORD      0x03   // 2-byte register
+#define NVOLAT_TX_INTERVAL    0x05   // 2-byte register
+#define NVOLAT_FIRST_CUSTOM   0x20
 
 /**
  * Standard flash
  */
 
-const uint16_t FLASH_SEGMENT_SIZE         = 512;      // Each flash segment has a size of 512 bytes
-const uint16_t BOOTLOADER_STARTING_ADDR   = 0x8000;   // Bootloader starting address - matches main memory starting addr. See "CC430F5137_memory_organization.png" side here
-const uint16_t USER_CODE_STARTING_ADDR    = ceil((float)(BOOTLOADER_STARTING_ADDR + BOOTLOADER_CODE_SIZE) / FLASH_SEGMENT_SIZE) * FLASH_SEGMENT_SIZE;   // Flash starting address for user code
-const uint16_t USER_CODE_LAST_SEGMENT_ADDR = 0xFDFF;
+const uint16_t VECTOR_TABLE_SEGMENT   = 0xFE00;     // Flash segment address containing isr vectors
+const uint16_t VECTOR_TABLE_ADDR      = 0xFF80;     // Starting address containing isr vectors
+const uint16_t USER_RESET_VECTOR      = 0xFFBC;     // Flash location that stores user's reset vector
+const uint16_t GDB_BOOT_RESET_VECTOR  = 0xFFFE;     // MSP430's reset vector
 
-const uint16_t VECTOR_TABLE_SEGMENT = 0xFE00;     // flash segment address containing isr vectors
-const uint16_t VECTOR_TABLE_ADDR = 0xFF80;        // Starting address containing isr vectors
-const uint16_t USER_RESET_VECTOR = 0xFFBC;        // flash location that stores user's reset vector
-const uint16_t GDB_BOOT_RESET_VECTOR = 0xFFFE;    // msp430's reset vector
+const uint16_t FLASH_SEGMENT_SIZE           = 0x200;    // 512 bytes is the size of each flash segment
+const uint16_t BOOTLOADER_STARTING_ADDR     = 0x8000;   // Bootloader starting address - matches main memory starting addr. See "CC430F5137_memory_organization.png" side here
+const uint16_t USER_CODE_STARTING_ADDR      = ceil((float)(BOOTLOADER_STARTING_ADDR + BOOTLOADER_CODE_SIZE) / (float)FLASH_SEGMENT_SIZE) * FLASH_SEGMENT_SIZE;   // Flash starting address for user code
 
 #endif /* MEMCONFIG_H_ */

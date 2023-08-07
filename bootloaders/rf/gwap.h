@@ -5,7 +5,7 @@
 #include "cc430radio.h"
 #include "memconfig.h"
 #include "product.h"
-#include "cc430flash.h"
+#include "cc430info.h"
 //#include "utils.h"
 
 /**
@@ -172,39 +172,35 @@ public:
      *
      * @return True if the transmission succeeds. False otherwise
      */
-    template<class T>
-    bool sendPacketVal(uint8_t funct, uint8_t regId, T val) {
-      int i;
-      int size = sizeof(val);
-      uint8_t buf[size];
+    bool sendPacketVal(uint8_t funct, uint8_t regId, uint8_t val) {
+      uint8_t buf[] = { val };
 
-      for (i = size; i > 0; i--) {
-//        flashMorseLine(val & 0xFF);
-        buf[i - 1] = val & 0xFF;
-        val >>= 8;
-      }
-
-      return sendPacket(funct, regId, buf, size);
+      return sendPacket(funct, regId, buf, 1);
     }
 
     void nvolatToFactoryDefaults() {
-      CC430FLASH nvMem;
+      CC430INFO infoMem;
 
       // Signature
-      uint8_t signature[] = {NVOLAT_SIGNATURE_HIGH, NVOLAT_SIGNATURE_LOW};
-      nvMem.write((uint8_t *) NVOLAT_SIGNATURE, signature, sizeof(signature));
+      uint8_t signature[] = { NVOLAT_SIGNATURE_HIGH, NVOLAT_SIGNATURE_LOW };
+      infoMem.write(signature, INFOMEM_CONFIG, NVOLAT_SIGNATURE, sizeof(signature));
 
       // Frequency channel
       uint8_t channel[] = {CCDEF_CHANNR};
-      nvMem.write((uint8_t *) NVOLAT_FREQ_CHANNEL, channel, sizeof(channel));
+      infoMem.write(channel, INFOMEM_CONFIG, NVOLAT_FREQ_CHANNEL, sizeof(channel));
 
       // Sync word
       uint8_t syncW[] = {CCDEF_SYNC1, CCDEF_SYNC0};
-      nvMem.write((uint8_t *) NVOLAT_SYNC_WORD, syncW, sizeof(syncW));
+      infoMem.write(syncW, INFOMEM_CONFIG, NVOLAT_SYNC_WORD, sizeof(syncW));
 
       // TX interval
       uint8_t txInt[] = {0xFF, 0};
-      nvMem.write((uint8_t *) NVOLAT_TX_INTERVAL, txInt, sizeof(txInt));
+      infoMem.write(txInt, INFOMEM_CONFIG, NVOLAT_TX_INTERVAL, sizeof(txInt));
+
+      // Reset all remaining values in INFOMEM_FIRST_CUSTOM
+      uint8_t unos[0x60];
+      memset(unos, 0xFF, 0x60);  // INFOMEM_D size is 0x80. INFOMEM_FIRST_CUSTOM is 0x20 so 0x80 - 0x20 => 0x60
+      infoMem.write(unos, INFOMEM_CONFIG, NVOLAT_FIRST_CUSTOM, sizeof(unos));
     }
 };
 
