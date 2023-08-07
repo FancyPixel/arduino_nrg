@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void delayClockCycles(register uint32_t n)
+void delayClockCycles2(register uint32_t n)
 {
     __asm__ __volatile__ (
                 "1: \n"
@@ -11,7 +11,7 @@ void delayClockCycles(register uint32_t n)
 
 void delay(int millis) {
   for (int i = 0; i < millis; i++) {
-    delayClockCycles(4000L);
+    delayClockCycles2(4000L);
 //    delayClockCycles(200L);
   }
 }

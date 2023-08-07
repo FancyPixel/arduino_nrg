@@ -18,7 +18,6 @@
  * Class constructor
  */
 
-// TODO: prova a modificare PA_LowPower con LongJohnson
 CC430RADIO::CC430RADIO(void)
 {
   carrierFreq = CFREQ_868;

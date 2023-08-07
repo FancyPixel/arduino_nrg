@@ -115,9 +115,9 @@ enum RFSTATE
 #define MRFI_SYNC_PIN_INT_IS_ENABLED()     (RF1AIE & BIT9)
 
 // Disable address check
-#define disableAddressCheck()     enableAddressCheck(false)
+//#define disableAddressCheck()     enableAddressCheck(false)
 // Disable CCA
-#define disableCCA()              enableCCA(false)
+//#define disableCCA()              enableCCA(false)
 // Set PATABLE single byte
 #define setTxPowerAmp(setting)    paTableByte = setting
 // PATABLE values
@@ -367,30 +367,30 @@ public:
      * 
      * Put radio into power-down state
      */
-    ALWAYS_INLINE
-    void setPowerDownState() 
-    {
-      /* Chip bug: Radio does not come out of this SLEEP when put to sleep
-       * using the SPWD cmd. However, it does wakes up if SXOFF was used to
-       * put it to sleep.
-       */
-      // Comming from RX state, we need to enter the IDLE state first
-      Strobe(RF_SIDLE);
-      // Enter Power-down state (XTAL off only)
-      Strobe(RF_SXOFF);
-    }
+//    ALWAYS_INLINE
+//    void setPowerDownState()
+//    {
+//      /* Chip bug: Radio does not come out of this SLEEP when put to sleep
+//       * using the SPWD cmd. However, it does wakes up if SXOFF was used to
+//       * put it to sleep.
+//       */
+//      // Comming from RX state, we need to enter the IDLE state first
+//      Strobe(RF_SIDLE);
+//      // Enter Power-down state (XTAL off only)
+//      Strobe(RF_SXOFF);
+//    }
 
     /**
      * wakeUp
      * 
      * Wake-up core
      */
-    ALWAYS_INLINE
-    void wakeUp()
-    {
-      __bic_SR_register(LPM3_bits);  // clears the bits corresponding to LPM3 and exits the low power mode
-      setRxState();
-    }
+//    ALWAYS_INLINE
+//    void wakeUp()
+//    {
+//      __bic_SR_register(LPM3_bits);  // clears the bits corresponding to LPM3 and exits the low power mode
+//      setRxState();
+//    }
 
     /**
      * sendData
@@ -419,14 +419,14 @@ public:
      *
      * @param enable True if address check has to be enabled
      */
-    ALWAYS_INLINE
-    void enableAddressCheck(bool enable)
-    {
-      if (enable)
-        WriteSingleReg(PKTCTRL1, 0x06);
-      else
-        WriteSingleReg(PKTCTRL1, 0x04);
-    }
+//    ALWAYS_INLINE
+//    void enableAddressCheck(bool enable)
+//    {
+//      if (enable)
+//        WriteSingleReg(PKTCTRL1, 0x06);
+//      else
+//        WriteSingleReg(PKTCTRL1, 0x04);
+//    }
 
     /**
      * enableCCA

@@ -14,8 +14,7 @@ MEMORY {
   infob            : ORIGIN = 0x1900, LENGTH = 0x0080 /* END=0x1980, size 128 */
   infoa            : ORIGIN = 0x1980, LENGTH = 0x0080 /* END=0x1a00, size 128 */
   ram (wx)         : ORIGIN = 0x1c00, LENGTH = 0x0ffe /* END=0x2bfe, size 4094 */
-  rom (rx)         : ORIGIN = 0x1000, LENGTH = 0x0600 /* END=0xfe00, size 1536 */
-  urom (rx)        : ORIGIN = 0x9200, LENGTH = 0x6bff /* END=0xFDFF, size 27647 */
+  urom (rx)        : ORIGIN = 0x9400, LENGTH = 0x6A00 /* END=0xFDFF, size 27136 */
   vectors          : ORIGIN = 0xff80, LENGTH = 0x0080 /* END=0x10000, size 128 as 64 2-byte segments */
   /* Remaining banks are absent */
   ram2 (wx)        : ORIGIN = 0x0000, LENGTH = 0x0000
@@ -32,6 +31,3 @@ PROVIDE (__infoc = 0x1880);
 PROVIDE (__infob = 0x1900);
 PROVIDE (__infoa = 0x1980);
 PROVIDE (__userrom = 0x8000);
-/*
-  urom (rx)        : ORIGIN = 0x9000, LENGTH = 0x6800 /* END=0xff80, size 32640 * /
-*/

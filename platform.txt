@@ -63,6 +63,9 @@ recipe.size.regex=^(?:\.text|\.data|\.bootloader)\s+([0-9]+).*
 recipe.size.regex.data=^(?:\.data|\.bss|\.noinit)\s+([0-9]+).*
 recipe.size.regex.eeprom=^(?:\.eeprom)\s+([0-9]+).*
 
+## Hooks
+recipe.hooks.prebuild.1.pattern=/bin/bash -c "export PATH=$HOME/.rvm/bin:$HOME/.rbenv/shims:$PATH; [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm; cd {runtime.platform.path} && bundle exec ruby {runtime.platform.path}/bootloaders/rf/scripts/compile_bootloader.rb {combine} {build.source.path}"
+recipe.hooks.postbuild.1.pattern=/bin/bash -c "export PATH=$HOME/.rvm/bin:$HOME/.rbenv/shims:$PATH; [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm; cd {runtime.platform.path} && bundle exec ruby {runtime.platform.path}/bootloaders/rf/scripts/append_sketch_to_bootloader.rb {combine} {build.path}/{build.project_name}.hex"
 
 # msp430 Uploader/Programmers tools
 # -----------------------------------
@@ -83,8 +86,9 @@ tools.rf2500.upload.pattern={cmd.path} rf2500 'prog {build.path}/{build.project_
 # TI's BSL
 tools.ti-bsl.upload.params.verbose=--verbose-on
 tools.ti-bsl.upload.params.quiet=--verbose-off
-tools.ti-bsl.cmd.path={runtime.tools.java-bsl.path}/BsLoader.jar
-tools.ti-bsl.upload.pattern=java -jar "{cmd.path}" "{build.path}/{build.project_name}.hex" "{serial.port}" "--verif-off" "{upload.verbose}"
+#tools.ti-bsl.cmd.path={runtime.tools.java-bsl.path}/BsLoader.jar
+#tools.ti-bsl.upload.pattern=java -jar "{cmd.path}" "{build.path}/{build.project_name}.hex" "{serial.port}" "--verif-off" "{upload.verbose}"
+tools.ti-bsl.upload.pattern=/bin/bash -c "export PATH=$HOME/.rvm/bin:$HOME/.rbenv/shims:$PATH; [[ -s $HOME/.rvm/scripts/rvm ]] && source $HOME/.rvm/scripts/rvm; cd {runtime.platform.path} && upload_hex -d {serial.port} -f {build.path}/{build.project_name}.hex -l info"
 
 # USB Default Flags
 # Default blank usb manufacturer will be filled it at compile time
