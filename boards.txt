@@ -39,6 +39,9 @@ nrg2.build.board=PANSTAMP_NRG
 
 nrg2.ldscript=ldscript
 
+#nrg2.serial.disableDTR=true
+#nrg2.serial.disableRTS=true
+
 ## With serial bootloader only
 ##------------------------------------------------------------
 nrg2.menu.rfloader.disabled=off

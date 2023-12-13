@@ -1,9 +1,15 @@
+#!/usr/bin/env ruby
+
 ### This script combines the RF bootloader and the compiled sketch into a single .hex
 
-require 'bundler/setup'
-Bundler.require
-
 require 'fileutils'
+
+MSP430_BSL_GEM_VERSION='0.3.0'.freeze
+
+unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
+  puts "Installing msp430_bsl-#{MSP430_BSL_GEM_VERSION}"
+  system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
+end
 
 must_execute = ARGV.shift == 'true'
 

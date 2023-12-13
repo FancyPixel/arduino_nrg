@@ -1,5 +1,13 @@
-require 'bundler/setup'
-Bundler.require
+#!/usr/bin/env ruby
+
+stop_after_compilation = ENV['STOP_AFTER_COMPILATION'] == 'true'
+
+MSP430_BSL_GEM_VERSION='0.3.0'.freeze
+
+unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
+  puts "Installing msp430_bsl-#{MSP430_BSL_GEM_VERSION}"
+  system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
+end
 
 UROM_START = 0x8000
 # UROM_END = 0xFF80   # Matches VECTOR_TABLE_SEGMENT start
@@ -31,7 +39,7 @@ class Numeric
 end
 
 PROGRAM_SIZE_COMMAND = "~/Library/Arduino15/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/msp430-size -A %s"
-RECOMPILE_COMMAND = "make clean && make"
+RECOMPILE_COMMAND = "make clean && STOP_AFTER_COMPILATION=true make"
 MEMORY_RF_UROM_LINE_TEMPLATE = "  urom (rx)        : ORIGIN = %s, LENGTH = %s /* END=0xFDFF, size %s */"
 BOARDS_NRG2_UPLOAD_MAX_SIZE = "nrg2.upload.maximum_size=%s"
 
@@ -52,7 +60,7 @@ urom_new_origin = ((UROM_START + boot_program_size) / FLASH_SEGMENT_SIZE.to_f).c
 urom_length = UROM_END - urom_new_origin
 
 puts "\n\n\e[32m *** PROGRAM INFO *** \e[0m\n\n"
-puts "\e[33m - Bootloader size:\e[0m 0x#{boot_program_size.to_hex_str} bytes - Used memory: #{boot_memory_size} bytes\n\n"
+puts "\e[33m - Bootloader size:\e[0m 0x#{boot_program_size.to_hex_str} (#{boot_program_size}) bytes - Used memory: #{boot_memory_size} bytes\n\n"
 puts "\e[33m - Concentrator's startFirmwareAddress:\e[0m 0x#{urom_new_origin.to_hex_str}\n\n"
 
 
@@ -60,10 +68,11 @@ puts "\e[33m - Concentrator's startFirmwareAddress:\e[0m 0x#{urom_new_origin.to_
 
 codesize_file_content = File.read CODESIZE_FILE_PATH
 prev_bootloader_code_size = codesize_file_content.scan(CODESIZE_REGEX).flatten.first.to_i
-# prev_isr_vector_string = codesize_file_content.scan(CODESIZE_ISR_VECTOR_REGEX).flatten.first
 # If bootloader size changed, update codesize file header and recompile
-# if (prev_bootloader_code_size != boot_program_size) || (prev_isr_vector_string != isr_vector_string)
-if (prev_bootloader_code_size != boot_program_size)
+
+# Force an update of codesize file header and recompile
+#if (prev_bootloader_code_size != boot_program_size)
+unless stop_after_compilation
   # Update needed files and recompile
   system "clear"
   puts "\n\n\e[32m *** Bootloader code modified, proceed with a new compilation *** \e[0m\n"
@@ -72,7 +81,6 @@ if (prev_bootloader_code_size != boot_program_size)
   puts " - Updating\e[33m codesize.h\e[0m \e[32mBOOTLOADER_CODE_SIZE #define\e[0m\n"
   # Replace old size with new size
   codesize_file_content[CODESIZE_REGEX] = "BOOTLOADER_CODE_SIZE #{boot_program_size}"
-# codesize_file_content[CODESIZE_ISR_VECTOR_REGEX] = isr_vector_string
   # Update codesize.h
   file = File.open(CODESIZE_FILE_PATH, 'w')
   file.write codesize_file_content

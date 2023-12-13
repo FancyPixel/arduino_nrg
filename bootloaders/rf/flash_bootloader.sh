@@ -49,4 +49,4 @@ then
   echo $MOTE_TYPE > $LAST_FLASHED_FOR_PATH
 fi
 
-make bsl-flash
+upload_hex -d $SERIAL_PORT -f rfloader.hex -l info

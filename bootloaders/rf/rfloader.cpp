@@ -56,8 +56,15 @@ int main(void) {
     delayClockCycles(5000);
   }
 
-  // Disable interrupts
-  __disable_interrupt();
+  // This flag will tell us whether wireless bootloader needs to start or not
+  bool *ptr1;
+  ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack
+  bool runUserCode = *ptr1;           // Read value. If "false" it means we're coming from sketch space
+
+  // Read user code starting address
+  uint16_t *ptr2;
+  ptr2 = (uint16_t*) USER_RESET_VECTOR;
+  userCodeAddr = *ptr2;
 
   // Check for factory reset
   uint32_t counter = 0;
@@ -69,23 +76,22 @@ int main(void) {
     counter++;
   }
 
+  // Disable interrupts
+  __disable_interrupt();
+
   // Init core
   initCore();
 
   // Give core some more time
-  delayMicroseconds(50000);
+//  delayMicroseconds(50000);
+//  delayMicroseconds(50000);
+//  delayMicroseconds(50000);
+//  delayMicroseconds(50000);
+//  delayMicroseconds(50000);
 
 //  delayClockCycles(1000000);
 //  Serial.begin(9600);
 //  delayClockCycles(1000000);
-
-  // Read user code starting address
-  uint16_t *ptr2 = (uint16_t *) USER_RESET_VECTOR;
-  userCodeAddr = *ptr2;
-
-  // This flag will tell us whether wireless bootloader needs to start or not
-  bool *ptr1 = (bool *) RAM_END_ADDRESS;  // Memory address at the end of the stack
-  bool runUserCode = *ptr1;         // Read value. If "false" it means we're coming from sketch space
 
   // Valid starting address of user code?
   if (userCodeAddr != 0xFFFF) {
