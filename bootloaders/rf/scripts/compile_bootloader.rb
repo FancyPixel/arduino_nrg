@@ -1,7 +1,13 @@
+#!/usr/bin/env ruby
+
 ### This script compiles the RF bootloader
 
-require 'bundler/setup'
-Bundler.require
+MSP430_BSL_GEM_VERSION='0.3.0'.freeze
+
+unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
+  puts "Installing msp430_bsl-#{MSP430_BSL_GEM_VERSION}"
+  system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
+end
 
 must_execute = ARGV.shift == 'true'
 
@@ -49,7 +55,11 @@ end
 # Calculate bootloader PCODE
 bootloader_pcode = boot_match_lines.first.scan(/\d+(?=,|\s)/).map!{ |n| n.to_i }.pack('C*').unpack('l>*').first
 
+# TODO: Force recompile
+exit system("#{RECOMPILE_COMMAND}")
+
 # Calculate sketch PCODE
+# TODO: Handle missing product.h (e.g. gwap-modem does not have it - maybe a simple solution is to add one to modem sketch)
 sketch_product_code_file_content = File.read SKETCH_PRODUCT_H_FILE_PATH
 sketch_match_lines = sketch_product_code_file_content.lines.select { |line| line.include? 'GWAP_PRODUCT_CODE' }
 # Break if number of matching lines is not OK
@@ -59,9 +69,6 @@ unless sketch_match_lines.size == 1
 end
 
 sketch_pcode = sketch_match_lines.first.scan(/(?<!\/\/[\s*])\d+/).first.to_i
-
-# TODO: Force recompile
-exit system("#{RECOMPILE_COMMAND}")
 
 =begin
 	# If bootloader's PCODE is different from sketch' PCODE, recompile bootloader with correct PCODE
