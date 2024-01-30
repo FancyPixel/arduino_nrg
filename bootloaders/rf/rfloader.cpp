@@ -146,6 +146,7 @@ int main(void) {
 
           // Check if it's time to execute user code (flashing done)
           // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
+
           if (neededLineNum >= fwLastLineNumber) {
             // Erase the vector table segment
             // A memory segment has a size of 512 bytes
@@ -167,8 +168,8 @@ int main(void) {
             //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
             isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
             isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
-            isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
-            isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
+//            isrTable[7][0x0E] = USER_CODE_STARTING_ADDR & 0xFF;
+//            isrTable[7][0x0F] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
 
             // Write ISR table
             for (uint8_t i = 0; i < sizeof(isrTable); i++) {
@@ -313,7 +314,7 @@ int main(void) {
           uint8_t row = (addrFromHexFile - VECTOR_TABLE_ADDR);
           row /= 0x10;
 
-          for (uint8_t i = 0; i < 16; i++) {
+          for (uint8_t i = 0; i < 0x10; i++) {
             if (i < currentLineLength - 3)
               isrTable[row][i] = dataLine[i + 3];
             else
