@@ -6,3 +6,5 @@
 *.o
 *.d
 *.map
+CMakeLists.txt
+cmake-build-debug
