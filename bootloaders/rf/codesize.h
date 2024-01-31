@@ -9,7 +9,7 @@
 
 //  ***  DO NOT MODIFY - THIS IS AUTOMATICALLY DEFINED AT BOOTLOADER COMPILE TIME  ***
 
-#define BOOTLOADER_CODE_SIZE 5086
+#define BOOTLOADER_CODE_SIZE 5104
 
 
 // TODO: Sembra non servire in functions.cpp:87 -> eliminare dalla fase di compilazione?

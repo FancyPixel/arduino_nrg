@@ -82,17 +82,6 @@ int main(void) {
   // Init core
   initCore();
 
-  // Give core some more time
-//  delayMicroseconds(50000);
-//  delayMicroseconds(50000);
-//  delayMicroseconds(50000);
-//  delayMicroseconds(50000);
-//  delayMicroseconds(50000);
-
-//  delayClockCycles(1000000);
-//  Serial.begin(9600);
-//  delayClockCycles(1000000);
-
   // Valid starting address of user code?
   if (userCodeAddr != 0xFFFF) {
     // Jump to user code if the wireless bootloader was not called from there

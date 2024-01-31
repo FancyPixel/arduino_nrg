@@ -191,13 +191,14 @@ void initCore() {
   RF1AIES = BIT0 | BIT9;
 
   // Config pins as outputs by default except P2, wich contains the ADC inputs
-  P1DIR = 0xFF;
-  P3DIR = 0xFF;
-  PJDIR = 0xFF;
+//  P1DIR = 0xFF;
+//  P3DIR = 0xFF;
+//  PJDIR = 0xFF;
 }
 
 void jumpToUserCode() {
-  directJump();
+  triggerBOR();
+//  directJump();
 }
 
 // Mark a line as already flashed
