@@ -151,6 +151,7 @@ int main(void) {
               isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
               isrTable[3][0x0F] = 0x80;
             #endif
+
             //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
             // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             // FFB  0 1 2 3 4 5 6 7 8 9 A B C D E F
@@ -161,7 +162,7 @@ int main(void) {
 //            isrTable[7][0x0F] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
 
             // Write ISR table
-            for (uint8_t i = 0; i < sizeof(isrTable); i++) {
+            for (uint8_t i = 0; i < sizeof(isrTable)/sizeof(isrTable[0]); i++) {
               flash.write((uint8_t *)VECTOR_TABLE_ADDR + (i * sizeof(isrTable[i])), isrTable[i], sizeof(isrTable[i]));
             }
 
