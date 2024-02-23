@@ -68,7 +68,7 @@ bool checkCRC(uint8_t *data, uint8_t len);
 uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities);
 void delayClockCycles(register uint32_t n);
 void directJump();
-void eraseUROM();
+void eraseUROM(bool eraseINFO = false);
 void factoryReset();
 uint16_t getCapabilities();
 uint16_t getFwVersion(uint8_t *line);

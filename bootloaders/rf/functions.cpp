@@ -50,7 +50,7 @@ void directJump() {
   (*p)();
 }
 
-void eraseUROM() {
+void eraseUROM(bool eraseINFO) {
   // Point at the begining of user flash
   uint16_t currentUROMSegment = USER_CODE_STARTING_ADDR;
 
@@ -59,46 +59,14 @@ void eraseUROM() {
     flash.eraseSegment((uint8_t *) currentUROMSegment);
     currentUROMSegment += FLASH_SEGMENT_SIZE;
   }
+
+  if (eraseINFO) flash.eraseSegment((uint8_t *) INFOMEM_CONFIG);
   LED_OFF();
 }
 
 void factoryReset() {
-  // Erase info memory
-  gwap.nvolatToFactoryDefaults();
-
-  // Erase UROM
-  eraseUROM();
-
-  // Erase VECTOR_TABLE_SEGMENT
-  flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
-
-  // Set bootloader's reset vector address
-  uint8_t reset_vector[] = { (BOOTLOADER_STARTING_ADDR & 0xFF), ((BOOTLOADER_STARTING_ADDR >> 8) & 0xFF) };
-  flash.write((uint8_t *)GDB_BOOT_RESET_VECTOR,  reset_vector, sizeof(reset_vector));
-
-  // Build and write BOOTLOADER's VECTOR TABLE
-//  uint8_t row[0x10];
-//  uint16_t currentISRVectorAddr = VECTOR_TABLE_ADDR;
-//  for (uint8_t i = 0; i < 8; i ++) {
-//    LED_ON();
-//    if (i < 4) {
-//      memset(row, 0xFF, 0x10);
-//      if (i == 3) {
-//        row[0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
-//        row[0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
-//      }
-//    } else {
-////      memcpy(row, isrVector_FFC0, 0x10);
-//    }
-//    if (i == 7) {
-//      row[0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
-//      row[0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
-//    }
-//
-//    flash.write((uint8_t *)currentISRVectorAddr, row, sizeof(row));
-//    currentISRVectorAddr += 0x10;
-//    LED_OFF();
-//  }
+  // Erase UROM and INFO memory
+  eraseUROM(true);
 }
 
 uint16_t getCapabilities() {
