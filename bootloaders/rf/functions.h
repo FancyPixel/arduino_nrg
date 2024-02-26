@@ -65,6 +65,7 @@
 #define CAPABILITY_2LINES 0x01
 
 bool checkCRC(uint8_t *data, uint8_t len);
+bool checkForFactoryReset();
 uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t firmwareVersion, uint16_t lineNumber, uint16_t capabilities);
 void delayClockCycles(register uint32_t n);
 void directJump();

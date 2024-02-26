@@ -78,7 +78,11 @@ int main(void) {
   // Init core
   initCore();
 
-  // Valid starting address of user code?
+  // if (userCodeAddr != 0xFFFF) {
+  //   jumpToUserCode();
+  // }
+  
+  // // Valid starting address of user code?
   // if (userCodeAddr != 0xFFFF) {
   //   // Jump to user code if the wireless bootloader was not called from there
   //   if (runUserCode) {
@@ -86,23 +90,39 @@ int main(void) {
   //   }
   // }
 
-  if (factoryResetAddr == 0x8000) {
+  // if (factoryResetAddr == 0x8000) {
+  //   factoryReset();
+  //   justFactoryReset = true;
+  //   // TODO: Set factoryResetAddr to 0xFFFF
+  // } else {
+  //    // Check for factory reset
+  //   uint16_t counter = 0;
+  //   while (IS_RESET_PIN_LOW()) {
+  //     if (counter >= 5000) {
+  //       factoryReset();
+  //       justFactoryReset = true;
+  //       break;
+  //     }
+  //     delayMicroseconds(50000);
+  //     counter++;
+  //   }
+  // }
+
+  //  Check for factory reset
+  if (checkForFactoryReset()) {
     factoryReset();
     justFactoryReset = true;
-    // TODO: Set factoryResetAddr to 0xFFFF
   } else {
-     // Check for factory reset
-    uint16_t counter = 0;
-    while (IS_RESET_PIN_LOW()) {
-      if (counter >= 5000) {
-        factoryReset();
-        justFactoryReset = true;
-        break;
+    // Check if firmware exists
+    if (userCodeAddr != 0xFFFF) {
+      if (runUserCode == false) {
+       // chiedi righe
+      } else {
+        jumpToUserCode(); // Never execute    
       }
-      delayMicroseconds(50000);
-      counter++;
     }
-  }
+  } 
+
 
   TIMER1A0 timer;
 

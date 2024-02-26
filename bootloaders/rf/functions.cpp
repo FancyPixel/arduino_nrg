@@ -25,6 +25,18 @@ bool checkCRC(uint8_t *data, uint8_t len) {
   return false;
 }
 
+bool checkForFactoryReset() {
+  uint16_t counter = 0;
+  while (IS_RESET_PIN_LOW()) {
+    if (counter >= 5000) {
+      return true;
+    }
+    delayMicroseconds(50000);
+    counter++;
+  }
+  return false;
+}
+
 uint8_t* createQueryDataFrom(uint8_t *buf, uint16_t fwVer, uint16_t lineNum, uint16_t capab) {
   buf[0] = (fwVer >> 8) & 0xFF;
   buf[1] = fwVer & 0xFF;
@@ -165,8 +177,8 @@ void initCore() {
 }
 
 void jumpToUserCode() {
-  triggerBOR();
-//  directJump();
+  // triggerBOR();
+ directJump();
 }
 
 // Mark a line as already flashed
