@@ -1,7 +1,7 @@
 # See: http://code.google.com/p/arduino/wiki/Platforms
 
-menu.rfloader=Wireless bootloader
-menu.combineBootAndSketch=Combine bootloader and Sketch
+#menu.rfloader=Wireless bootloader
+menu.combineBootAndSketch=HEX Build Config
 
 ##############################################################
 nrg3.name=panStamp NRG 3 w/ cc430f5137
@@ -37,26 +37,28 @@ nrg2.build.f_cpu=12000000L
 nrg2.build.variant=panstamp_nrg_2.0
 nrg2.build.board=PANSTAMP_NRG
 
-nrg2.ldscript=ldscript
+nrg2.ldscript=ldscript_rf
 
 #nrg2.serial.disableDTR=true
 #nrg2.serial.disableRTS=true
 
 ## With serial bootloader only
 ##------------------------------------------------------------
-nrg2.menu.rfloader.disabled=off
-nrg2.menu.rfloader.disabled.ldscript=ldscript
-nrg2.menu.rfloader.disabled.rfloaderEnabled=false
-nrg2.menu.combineBootAndSketch.disabled=off
-nrg2.menu.combineBootAndSketch.disabled.combine=false
+#nrg2.menu.rfloader.disabled=off
+#nrg2.menu.rfloader.disabled.ldscript=ldscript
+#nrg2.menu.rfloader.disabled.rfloaderEnabled=false
+nrg2.menu.combineBootAndSketch.combineBFW=Bootloader and Firmware
+nrg2.menu.combineBootAndSketch.combineBFW.combine=boot_and_fw
+nrg2.menu.combineBootAndSketch.combineFW=Firmware only
+nrg2.menu.combineBootAndSketch.combineFW.combine=fw_only
 
-## With serial and wireless bootloader
+## With wireless bootloader and Firmware
 ##------------------------------------------------------------
-nrg2.menu.rfloader.enabled=on
-nrg2.menu.rfloader.enabled.ldscript=ldscript_rf
-nrg2.menu.rfloader.enabled.rfloaderEnabled=true
-nrg2.menu.combineBootAndSketch.enabled=on
-nrg2.menu.combineBootAndSketch.enabled.combine=true
+#nrg2.menu.rfloader.enabled=on
+#nrg2.menu.rfloader.enabled.ldscript=ldscript_rf
+#nrg2.menu.rfloader.enabled.rfloaderEnabled=true
+#nrg2.menu.combineBootAndSketch.enabled=on
+#nrg2.menu.combineBootAndSketch.enabled.combine=true
 
 ##############################################################
 nrg1.name=panStamp NRG 1.1 w/ cc430f5137

@@ -11,8 +11,8 @@ unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
   system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
 end
 
-rfloader_enabled = ARGV.shift == 'true'
-must_execute = ARGV.shift == 'true'
+kind_of_combine = ARGV.shift
+must_execute = kind_of_combine == 'boot_and_fw'
 
 # Break if we've not enabled "Wireless bootloader" ARDUINO IDE's option
 unless must_execute
@@ -69,7 +69,7 @@ user_code_starting_addr = addr_of_line(sketch_lines.first)
 combined_file_content = []
 File.read(BOOT_HEX_FILE_PATH).each_line do |line|
   line.strip!
-  if !is_data_line?(line) && !is_vector_table_line?(line)
+  if is_data_line?(line) && !is_vector_table_line?(line)
     combined_file_content << line
   end
 end

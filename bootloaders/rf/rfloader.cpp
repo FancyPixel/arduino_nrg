@@ -158,8 +158,8 @@ int main(void) {
             //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
             isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
             isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
-//            isrTable[7][0x0E] = USER_CODE_STARTING_ADDR & 0xFF;
-//            isrTable[7][0x0F] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
+            isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
+            isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
 
             // Write ISR table
             for (uint8_t i = 0; i < sizeof(isrTable)/sizeof(isrTable[0]); i++) {

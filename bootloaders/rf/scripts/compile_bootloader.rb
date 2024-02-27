@@ -9,8 +9,8 @@ unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
   system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
 end
 
-rfloader_enabled = ARGV.shift == 'true'
-must_execute = ARGV.shift == 'true'
+kind_of_combine = ARGV.shift
+must_execute = kind_of_combine == 'boot_and_fw'
 
 # Break if we've not enabled "Combine bootloader and Sketch" ARDUINO IDE's option
 unless must_execute
