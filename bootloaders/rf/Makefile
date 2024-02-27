@@ -3,7 +3,6 @@
 SERPORT ?= /dev/tty.usbserial-DA013RBN
 ARDUINO_ROOT = ~/Library/Arduino15
 TOOLCHAIN = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/msp430-gcc/4.6.3/bin/msp430-
-JAVA_BSL = $(ARDUINO_ROOT)/packages/panstamp_nrg/tools/java-bsl/1.0.0/BsLoader.jar
 
 MCU = cc430f5137
 SRCS ?= rfloader.cpp cc430radio.cpp rf1a.cpp pmm.cpp gwap.cpp functions.cpp cc430info.cpp
@@ -34,7 +33,7 @@ LD = $(CC)
 PROG := $(firstword $(SRCS:.cpp=))
 OBJS := $(SRCS:.cpp=.o)
 
-all: $(PROG).elf $(PROG).hex $(PROG).lst info
+all: $(PROG).elf $(PROG).hex $(PROG).lst post-compile
 
 %.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $(PROG).elf $(OBJS)
@@ -56,10 +55,7 @@ gdb-flash:
 	$(TOOLCHAIN)gdb -b 38400 -ex 'set debug remote 0' -ex 'target remote $(SERPORT)' $(PROG).elf -ex 'erase' -ex 'load' -ex 'quit'
 
 bsl-flash:
-	java -jar $(JAVA_BSL) $(PROG).hex $(SERPORT) --verif-off --verbose-on
+	upload_hex -d $(SERPORT) -f rfloader.hex -l info
 
-upload:
-	java -jar $(JAVA_BSL) /var/folders/8s/6k3r4rt57r38rl8r4ngd6j780000gn/T/arduino_build_414041/ntc.ino.hex $(SERPORT) --verif-off --verbose-on
-
-info:
-	@ruby scripts/post_compile.rb
+post-compile:
+	ruby scripts/post_compile.rb

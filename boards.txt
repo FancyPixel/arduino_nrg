@@ -46,6 +46,7 @@ nrg2.ldscript=ldscript
 ##------------------------------------------------------------
 nrg2.menu.rfloader.disabled=off
 nrg2.menu.rfloader.disabled.ldscript=ldscript
+nrg2.menu.rfloader.disabled.rfloaderEnabled=false
 nrg2.menu.combineBootAndSketch.disabled=off
 nrg2.menu.combineBootAndSketch.disabled.combine=false
 
@@ -53,6 +54,7 @@ nrg2.menu.combineBootAndSketch.disabled.combine=false
 ##------------------------------------------------------------
 nrg2.menu.rfloader.enabled=on
 nrg2.menu.rfloader.enabled.ldscript=ldscript_rf
+nrg2.menu.rfloader.enabled.rfloaderEnabled=true
 nrg2.menu.combineBootAndSketch.enabled=on
 nrg2.menu.combineBootAndSketch.enabled.combine=true
 

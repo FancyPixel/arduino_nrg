@@ -9,6 +9,7 @@ unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
   system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
 end
 
+rfloader_enabled = ARGV.shift == 'true'
 must_execute = ARGV.shift == 'true'
 
 # Break if we've not enabled "Combine bootloader and Sketch" ARDUINO IDE's option
@@ -57,6 +58,8 @@ bootloader_pcode = boot_match_lines.first.scan(/\d+(?=,|\s)/).map!{ |n| n.to_i }
 
 # TODO: Force recompile
 exit system("#{RECOMPILE_COMMAND}")
+
+# CODICE NON RAGGIUNGIBILE AL MOMENTO
 
 # Calculate sketch PCODE
 # TODO: Handle missing product.h (e.g. gwap-modem does not have it - maybe a simple solution is to add one to modem sketch)

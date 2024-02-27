@@ -11,6 +11,7 @@ unless system "gem list msp430_bsl -v #{MSP430_BSL_GEM_VERSION} -i --silent"
   system "gem install msp430_bsl -v #{MSP430_BSL_GEM_VERSION}"
 end
 
+rfloader_enabled = ARGV.shift == 'true'
 must_execute = ARGV.shift == 'true'
 
 # Break if we've not enabled "Wireless bootloader" ARDUINO IDE's option
@@ -48,6 +49,14 @@ def addr_of_line(line)
   line.strip[3..6].to_i(16)
 end
 
+def is_data_line?(line)
+  line[7..8].to_i(16).zero?
+end
+
+def is_vector_table_line?(line)
+  addr_of_line(line) >= VECTOR_TABLE_ADDR
+end
+
 def data_length_of_line(line)
   line.strip[1..2].to_i(16)
 end
@@ -60,15 +69,14 @@ user_code_starting_addr = addr_of_line(sketch_lines.first)
 combined_file_content = []
 File.read(BOOT_HEX_FILE_PATH).each_line do |line|
   line.strip!
-  if !line.start_with?(':00') && !line.start_with?(':10FF') && !line.start_with?(':04000003')
+  if !is_data_line?(line) && !is_vector_table_line?(line)
     combined_file_content << line
   end
 end
 
 File.read(SKETCH_HEX_FILE_PATH).each_line do |line|
   line.strip!
-  addr_str = line[3..6]
-  addr = addr_str.to_i(16)
+  addr = addr_of_line(line)
   if addr >= VECTOR_TABLE_ADDR
     if addr == 0xFFB0
       line[-10..-7] = "#{(user_code_starting_addr & 0xFF).to_hex_str}#{((user_code_starting_addr >> 8) & 0xFF).to_hex_str}"

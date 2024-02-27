@@ -23,7 +23,6 @@ int main(void) {
   uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
   // User code address
   uint16_t userCodeAddr;
-  uint16_t factoryResetAddr;
   bool correctLineReceived = false;
   uint16_t firmwareVersion = 0xFFFF;
   bool requestLine = true, parsingFirstLine = true, finishedParsing = false;
@@ -68,45 +67,12 @@ int main(void) {
   ptr2 = (uint16_t*) USER_RESET_VECTOR;
   userCodeAddr = *ptr2;
 
-  uint16_t *ptr3;
-  ptr3 = (uint16_t*) FACTORY_RESET_VECTOR;
-  factoryResetAddr = *ptr3;
-
    // Disable interrupts
   __disable_interrupt();
 
   // Init core
   initCore();
 
-  // if (userCodeAddr != 0xFFFF) {
-  //   jumpToUserCode();
-  // }
-  
-  // // Valid starting address of user code?
-  // if (userCodeAddr != 0xFFFF) {
-  //   // Jump to user code if the wireless bootloader was not called from there
-  //   if (runUserCode) {
-  //     jumpToUserCode();
-  //   }
-  // }
-
-  // if (factoryResetAddr == 0x8000) {
-  //   factoryReset();
-  //   justFactoryReset = true;
-  //   // TODO: Set factoryResetAddr to 0xFFFF
-  // } else {
-  //    // Check for factory reset
-  //   uint16_t counter = 0;
-  //   while (IS_RESET_PIN_LOW()) {
-  //     if (counter >= 5000) {
-  //       factoryReset();
-  //       justFactoryReset = true;
-  //       break;
-  //     }
-  //     delayMicroseconds(50000);
-  //     counter++;
-  //   }
-  // }
 
   //  Check for factory reset
   if (checkForFactoryReset()) {

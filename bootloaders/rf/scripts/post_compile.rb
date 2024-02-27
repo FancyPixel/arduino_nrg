@@ -46,16 +46,11 @@ BOARDS_NRG2_UPLOAD_MAX_SIZE = "nrg2.upload.maximum_size=%s"
 ### ADD VECTOR TABLE to codesize.h
 hex_file_content = File.read HEX_FILE_PATH
 
-# Example:  uint8_t isrVector_FFC0[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-FFC0_data = hex_file_content.scan(FFC0_VECTOR_HEX_FILE_REGEX).flatten.first.strip[9..-3]
-isr_vector_string = "const uint8_t isrVector_FFC0[] = { " + FFC0_data.scan(/.{2}/).map { |byte| "0x#{byte}" }.join(', ') + ' };'
-
 ### PRINT BOOTLOADER SIZE
 boot_size_data = `#{ PROGRAM_SIZE_COMMAND % ELF_FILE_PATH }`
 
 boot_program_size = boot_size_data.scan(BOOT_DATA_SIZE_REGEX).flatten.map(&:to_i).reduce :+
 boot_memory_size = boot_size_data.scan(BOOT_MEMORY_SIZE_REGEX).flatten.map(&:to_i).reduce :+
-# urom_new_origin = UROM_START + boot_program_size
 urom_new_origin = ((UROM_START + boot_program_size) / FLASH_SEGMENT_SIZE.to_f).ceil * FLASH_SEGMENT_SIZE
 urom_length = UROM_END - urom_new_origin
 
@@ -64,18 +59,13 @@ puts "\e[33m - Bootloader size:\e[0m 0x#{boot_program_size.to_hex_str} (#{boot_p
 puts "\e[33m - Concentrator's startFirmwareAddress:\e[0m 0x#{urom_new_origin.to_hex_str}\n\n"
 
 
-### IF NECESSARY, UPDATE codesize.h and recompile
-
-codesize_file_content = File.read CODESIZE_FILE_PATH
-prev_bootloader_code_size = codesize_file_content.scan(CODESIZE_REGEX).flatten.first.to_i
-# If bootloader size changed, update codesize file header and recompile
-
+### UPDATE codesize.h and recompile
 # Force an update of codesize file header and recompile
-#if (prev_bootloader_code_size != boot_program_size)
 unless stop_after_compilation
   # Update needed files and recompile
   system "clear"
-  puts "\n\n\e[32m *** Bootloader code modified, proceed with a new compilation *** \e[0m\n"
+
+  codesize_file_content = File.read CODESIZE_FILE_PATH
 
   # Update codesize.h
   puts " - Updating\e[33m codesize.h\e[0m \e[32mBOOTLOADER_CODE_SIZE #define\e[0m\n"

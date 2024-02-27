@@ -11,8 +11,4 @@
 
 #define BOOTLOADER_CODE_SIZE 4568
 
-
-// TODO: Sembra non servire in functions.cpp:87 -> eliminare dalla fase di compilazione?
-//const uint8_t isrVector_FFC0[] = { 0x9A, 0x84, 0x9A, 0x84, 0x9A, 0x84, 0x9A, 0x84, 0x9A, 0x84, 0x9A, 0x84, 0x9A, 0x84, 0x9A, 0x84 };
-
 #endif //RF_BOOTLOADER_CODESIZE_H
