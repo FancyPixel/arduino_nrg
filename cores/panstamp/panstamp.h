@@ -266,6 +266,11 @@ class PANSTAMP
      */
     bool sendData(CCPACKET packet);
 
+
+    // Set TX unmodulated test mode
+
+    void enterCWMode(void);
+
     #ifdef FHSS_ENABLED
     /**
      * startDwellingTimer

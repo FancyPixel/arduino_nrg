@@ -389,6 +389,16 @@ void PANSTAMP::reset(void)
 //  WDTCTL = 0;
 //  while (1) {}
 }
+
+
+void PANSTAMP::enterCWMode() {
+
+  WriteSingleReg(PKTCTRL0, 0x32);
+
+  WriteSingleReg(MDMCFG2, 0x33);
+
+  radio.setTxState();
+}
    
 /**
  * Pre-instantiate PANSTAMP object
