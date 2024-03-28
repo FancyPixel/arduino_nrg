@@ -23,6 +23,10 @@ int main(void) {
   uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
   // User code address
   uint16_t userCodeAddr;
+  // Bootloader version high word
+  uint16_t bootloaderVersionH;
+  // Bootloader version low word
+  uint16_t bootloaderVersionL;
   bool correctLineReceived = false;
   uint16_t firmwareVersion = 0xFFFF;
   bool requestLine = true, parsingFirstLine = true, finishedParsing = false;
@@ -66,6 +70,22 @@ int main(void) {
   uint16_t *ptr2;
   ptr2 = (uint16_t*) USER_RESET_VECTOR;
   userCodeAddr = *ptr2;
+
+  //Read and update bootloader version
+  uint16_t *ptr3;
+  ptr3 = (uint16_t*) BL_VERSION_H_VECTOR;
+  bootloaderVersionH = *ptr3;
+  
+  uint16_t *ptr4;
+  ptr4 = (uint16_t*) BL_VERSION_L_VECTOR;
+  bootloaderVersionL = *ptr4;
+
+  uint16_t updatedBootloaderVersionH = (FIRMWARE_VERSION[0] << 8) | FIRMWARE_VERSION[1];
+  uint16_t updatedBootloaderVersionL = (FIRMWARE_VERSION[2] << 8) | FIRMWARE_VERSION[3];
+
+  if (bootloaderVersionH != updatedBootloaderVersionH || bootloaderVersionL != updatedBootloaderVersionL ) { 
+    flash.update((unsigned char*)FIRMWARE_VERSION, 0xFE00, 0x1B6, sizeof(FIRMWARE_VERSION));
+  }
 
    // Disable interrupts
   __disable_interrupt();
@@ -127,7 +147,7 @@ int main(void) {
           // Bytes count  //          12                1    1    1     2        2           1                         20                                           (20)                          1      //  segment length (bytes)
 
           // Single-line total packet length: 41 bytes
-          // Two-lines total packet length: 62 bytes
+          // Two-lines total packet length: 61 bytes
 
           // 2f000a0072e1694700000004 00 00 02 0064 0000 14  94000055425c0135d0085a8245ea1f3140fe2b97  9410003f4076000f9308249242ea1f5c012f839d  9a
 

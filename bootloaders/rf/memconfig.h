@@ -71,6 +71,8 @@ const uint16_t VECTOR_TABLE_SEGMENT   = 0xFE00;     // Flash segment address con
 const uint16_t VECTOR_TABLE_ADDR      = 0xFF80;     // Starting address containing isr vectors
 const uint16_t USER_RESET_VECTOR      = 0xFFBC;     // Flash location that stores user's reset vector
 const uint16_t FACTORY_RESET_VECTOR   = 0xFFBA;     // Flash location that stores factory reset vector
+const uint16_t BL_VERSION_H_VECTOR      = 0xFFB6;     // Flash location that stores Bootloader version vector (high word)
+const uint16_t BL_VERSION_L_VECTOR      = 0xFFB8;     // Flash location that stores Bootloader version vector (low word)
 const uint16_t GDB_BOOT_RESET_VECTOR  = 0xFFFE;     // MSP430's reset vector
 
 const uint16_t FLASH_SEGMENT_SIZE           = 0x200;    // 512 bytes is the size of each flash segment
