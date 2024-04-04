@@ -176,6 +176,11 @@ int main(void) {
             // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             // FFB  0 1 2 3 4 5 6 7 8 9 A B C D E F
             //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
+            isrTable[3][0x06] = FIRMWARE_VERSION[1];
+            isrTable[3][0x07] = FIRMWARE_VERSION[0];
+            isrTable[3][0x08] = FIRMWARE_VERSION[3];
+            isrTable[3][0x09] = FIRMWARE_VERSION[2];
+
             isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
             isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
             isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
