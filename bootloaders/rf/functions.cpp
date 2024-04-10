@@ -57,6 +57,8 @@ void delayClockCycles(register uint32_t n) {
 }
 
 void directJump() {
+  // TODO: Read row #3, bytes [C,D] of vector table
+
   void (*p)(void);
   p = (void (*)(void))USER_CODE_STARTING_ADDR;
   (*p)();
