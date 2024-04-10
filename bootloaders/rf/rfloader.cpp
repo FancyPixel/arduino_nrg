@@ -180,12 +180,6 @@ int main(void) {
             isrTable[3][0x08] = FIRMWARE_VERSION[3];
             isrTable[3][0x09] = FIRMWARE_VERSION[2];
 
-            // TODO: Cambiare le due righe qui sotto
-            //       Non ci si può più basare su USER_CODE_STARTING_ADDR, ma bisogna andare a leggere
-            //       isrTable[7][0x0E] e isrTable[7][0x0F]
-
-//            isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
-//            isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
             isrTable[3][0x0C] = isrTable[7][0x0E];
             isrTable[3][0x0D] = isrTable[7][0x0F];
             isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
@@ -318,7 +312,7 @@ int main(void) {
         // Only for the first line received
         if (firstLine) {
           // Is the starting address from the hex file equal to our user flash starting address?
-          if (addrFromHexFile != userRomStartingAddress) {
+          if (addrFromHexFile < userRomStartingAddress) {
             // Jump to user code
            jumpToUserCode();
           } else {
