@@ -49,7 +49,7 @@ class CC430INFO : public CC430FLASH
      * @return amount of bytes read
      */
     using CC430FLASH::read;
-    virtual uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) { return read(buffer, section, position, length, 128); }
+    virtual uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return read(buffer, section, position, length, 128); }
     // uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length, uint8_t size);
 
   //   /**
@@ -64,7 +64,8 @@ class CC430INFO : public CC430FLASH
   //    *
   //    * @return amount of bytes copied
   //    */
-  //   uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length);
+    using CC430FLASH::write;
+    virtual uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return write(buffer, section, position, length, 128);}
 
   //   void eraseSegment(uint8_t *memAddress);
 };

@@ -38,7 +38,7 @@
  * @return amount of bytes read
  */
 
-uint8_t CC430FLASH::read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length, uint16_t size)
+uint8_t CC430FLASH::read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length, uint16_t size)
 {
   if ((position + length) > size)
     return 0;                           // out of range
@@ -65,16 +65,16 @@ uint8_t CC430FLASH::read(uint8_t *buffer, uint16_t section, uint16_t position, u
  *
  * @return amount of bytes copied
  */
-uint8_t CC430FLASH::write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
-  if ((position + length) > 128) {
+uint8_t CC430FLASH::write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length, uint16_t size) {
+  if ((position + length) > size) {
     return 0;                           // out of range
   }
 
-  uint8_t buf[128];
+  uint8_t buf[size];
   uint16_t i, j;
   char * flashPtr = (char *) section;   // Initialize Flash pointer
 
-  for (i = 0; i < 128; i++) {
+  for (i = 0; i < size; i++) {
     buf[i] = flashPtr[i];                // Save current contents in temporary buffer
   }
 
@@ -90,7 +90,7 @@ uint8_t CC430FLASH::write(uint8_t *buffer, uint16_t section, uint16_t position, 
   *flashPtr = 0;                         // Dummy write to erase Flash seg
   FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
 
-  for (i = 0; i < 128; i++) {
+  for (i = 0; i < size; i++) {
     if (i == position) {
       for (j = 0; j < length; j++) {
         *flashPtr++ = buffer[j];         // Write byte to flash
@@ -113,6 +113,35 @@ uint8_t CC430FLASH::write(uint8_t *buffer, uint16_t section, uint16_t position, 
 void waitReady() {
   while(FCTL3 & BUSY);
 }
+
+uint8_t CC430FLASH::rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t length) {
+  uint16_t i = 0;
+
+  __disable_interrupt();                 // 5xx Workaround: Disable global                                      
+  waitReady();
+  FCTL3 = FWKEY;                         // Clear Lock bit
+  FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
+
+  while (i < length)
+  {
+    *memAddress = buffer[i];             // Write byte in flash
+    
+    waitReady();                         // Wait for write to complete
+    
+    if (*memAddress == buffer[i])        // Check flash contents before skipping to the next position
+    {
+      memAddress++;
+      i++;
+    }
+  }
+
+  waitReady();
+  FCTL1 = FWKEY;                         // Clear WRT bit
+  FCTL3 = FWKEY+LOCK;                    // Set LOCK bit
+  __enable_interrupt();                  // Re-enable interrupts
+  return length;
+}
+
 
 void CC430FLASH::eraseSegment(uint8_t *memAddress) {
   waitReady();

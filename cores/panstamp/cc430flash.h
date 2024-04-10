@@ -43,7 +43,7 @@ class CC430FLASH
      * @return amount of bytes read
      */
     virtual uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return read(buffer, section, position, length, 512); }
-    uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length, uint16_t size);
+    uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length, uint16_t size);
 
     /**
      * write
@@ -57,7 +57,10 @@ class CC430FLASH
      *
      * @return amount of bytes copied
      */
-    uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length);
+    virtual uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return write(buffer, section, position, length, 512);}
+    uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length, uint16_t size);
+
+    uint8_t rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t length);
 
     void eraseSegment(uint8_t *memAddress);
 };
