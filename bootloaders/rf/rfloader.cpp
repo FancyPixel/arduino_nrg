@@ -60,7 +60,6 @@ int main(void) {
     LED_OFF();
     delayClockCycles(5000);
   }
-
   // This flag will tell us whether wireless bootloader needs to start or not
   bool *ptr1;
   ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack

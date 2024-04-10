@@ -22,7 +22,7 @@
  * Creation date: 10/23/2013
  */
 
-#include "cc430info.h"
+#include "cc430flash.h"
 #include "cc430x513x.h"
 
 /**
@@ -37,9 +37,10 @@
  *
  * @return amount of bytes read
  */
-uint8_t CC430INFO::read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length)
+
+uint8_t CC430FLASH::read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length, uint16_t size)
 {
-  if ((position + length) > 128)
+  if ((position + length) > size)
     return 0;                           // out of range
 
   uint16_t i;
@@ -64,7 +65,7 @@ uint8_t CC430INFO::read(uint8_t *buffer, uint16_t section, uint16_t position, ui
  *
  * @return amount of bytes copied
  */
-uint8_t CC430INFO::write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
+uint8_t CC430FLASH::write(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
   if ((position + length) > 128) {
     return 0;                           // out of range
   }
@@ -113,7 +114,7 @@ void waitReady() {
   while(FCTL3 & BUSY);
 }
 
-void CC430INFO::eraseSegment(uint8_t *memAddress) {
+void CC430FLASH::eraseSegment(uint8_t *memAddress) {
   waitReady();
   FCTL3 = FWKEY;              // Clear LOCK
   FCTL1 = FWKEY | ERASE;      // Enable segment erase
