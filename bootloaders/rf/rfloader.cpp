@@ -20,7 +20,7 @@ int main(void) {
   uint8_t dataLineLength = 0, currentLineLength = 0;
   // Pointer to line buffer
   uint8_t *dataLine;
-  uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);;
+  uint8_t *queryData = (uint8_t*)malloc(sizeof(uint8_t) * GWAP_QUERY_BYTES_COUNT);
   // User code address
   uint16_t userCodeAddr;
   // Bootloader version high word
@@ -103,7 +103,7 @@ int main(void) {
       if (runUserCode == false) {
        // chiedi righe
       } else {
-        jumpToUserCode(); // Never execute    
+        jumpToUserCode();
       }
     }
   } 
@@ -180,8 +180,8 @@ int main(void) {
             isrTable[3][0x08] = FIRMWARE_VERSION[3];
             isrTable[3][0x09] = FIRMWARE_VERSION[2];
 
-            isrTable[3][0x0C] = USER_CODE_STARTING_ADDR & 0xFF;
-            isrTable[3][0x0D] = (USER_CODE_STARTING_ADDR >> 8) & 0xFF;
+            isrTable[3][0x0C] = isrTable[7][0x0E];
+            isrTable[3][0x0D] = isrTable[7][0x0F];
             isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
             isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
 
@@ -312,7 +312,7 @@ int main(void) {
         // Only for the first line received
         if (firstLine) {
           // Is the starting address from the hex file equal to our user flash starting address?
-          if (addrFromHexFile != userRomStartingAddress) {
+          if (addrFromHexFile < userRomStartingAddress) {
             // Jump to user code
            jumpToUserCode();
           } else {
