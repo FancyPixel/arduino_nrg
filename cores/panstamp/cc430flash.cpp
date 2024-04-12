@@ -152,3 +152,41 @@ void CC430FLASH::eraseSegment(uint8_t *memAddress) {
   FCTL3 = FWKEY | LOCK;       // Done, set LOCK
 }
 
+uint8_t CC430FLASH::update(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
+    if ((position + length) > 512) {
+      return 0;                           // out of range
+    }
+
+    uint8_t buf[512];
+    uint16_t i, j;
+    char * flashPtr = (char *) section;   // Initialize Flash pointer
+
+    for (i = 0; i < 512; i++) {
+      buf[i] = flashPtr[i];                // Save current contents in temporary buffer
+    }
+
+    FCTL3 = FWKEY;
+
+    FCTL1 = FWKEY+ERASE;                   // Set Erase bit
+    *flashPtr = 0;                         // Dummy write to erase Flash seg
+    FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
+
+    for (i = 0; i < 512; i++) {
+      if (i == position) {
+        for (j = 0; j < length; j += 2) {
+          *flashPtr++ = buffer[j+1];         // Write byte to flash
+          *flashPtr++ = buffer[j];         // Write byte to flash
+        }
+
+        i += length-1;
+      } else {
+        *flashPtr++ = buf[i];              // Write byte to flash
+      }
+    }
+
+    FCTL1 = FWKEY;                         // Clear WRT bit
+    FCTL3 = FWKEY+LOCK;                    // Set LOCK bit
+
+    return length;
+}
+

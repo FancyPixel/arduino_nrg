@@ -63,6 +63,8 @@ class CC430FLASH
     uint8_t rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t length);
 
     void eraseSegment(uint8_t *memAddress);
+
+    uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length);
 };
 
 #endif
