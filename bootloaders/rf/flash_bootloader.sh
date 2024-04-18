@@ -4,11 +4,11 @@ LAST_FLASHED_FOR_PATH=${SCRIPT_PATH}/last_flashed_for
 
 declare -a mote_types=("modem" "bollard" "repeater" "gate" "ame")
 
-usage() { echo "Usage: $0 -t <Mote type (modem, bollard, repeater, gate, ame)> [-s <Serial port path>]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -t <Mote type (modem, bollard, repeater, gate, ame)> [-d <Serial device path>]" 1>&2; exit 1; }
 while getopts t:s: option; do
     case "${option}" in
         t) MOTE_TYPE=${OPTARG};;
-        s) SERIAL_PORT=${OPTARG};;
+        d) SERIAL_PORT=${OPTARG};;
         *) usage;;
     esac
 done
