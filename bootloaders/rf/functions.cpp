@@ -57,8 +57,12 @@ void delayClockCycles(register uint32_t n) {
 }
 
 void directJump() {
+  // Read user code starting address
+  uint16_t *ptr2 = (uint16_t*) USER_RESET_VECTOR;
+  uint16_t userCodeAddr = *ptr2;
+
   void (*p)(void);
-  p = (void (*)(void))USER_CODE_STARTING_ADDR;
+  p = (void (*)(void)) userCodeAddr;
   (*p)();
 }
 

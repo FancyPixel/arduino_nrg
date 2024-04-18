@@ -22,18 +22,12 @@
  * Creation date: 10/23/2013
  */
 
-#ifndef _CC430INFO_H
-#define _CC430INFO_H
+#ifndef _CC430FLASH_H
+#define _CC430FLASH_H
 
 #include "wiring.h"
-#include "cc430flash.h"
 
-#define INFOMEM_SECTION_A  0x1980
-#define INFOMEM_SECTION_B  0x1900
-#define INFOMEM_SECTION_C  0x1880
-#define INFOMEM_SECTION_D  0x1800
-
-class CC430INFO : public CC430FLASH
+class CC430FLASH
 {
   public:
     /**
@@ -48,26 +42,29 @@ class CC430INFO : public CC430FLASH
      *
      * @return amount of bytes read
      */
-    using CC430FLASH::read;
-    virtual uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return read(buffer, section, position, length, 128); }
-    // uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length, uint8_t size);
+    virtual uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return read(buffer, section, position, length, 512); }
+    uint8_t read(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length, uint16_t size);
 
-  //   /**
-  //    * write
-  //    * 
-  //    * Write buffer in info memory
-  //    *
-  //    * @param buffer array to be written
-  //    * @param section info memory section (memory address)
-  //    * @param position position in section
-  //    * @pararm length Length to be written
-  //    *
-  //    * @return amount of bytes copied
-  //    */
-    using CC430FLASH::write;
-    virtual uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return write(buffer, section, position, length, 128);}
+    /**
+     * write
+     * 
+     * Write buffer in info memory
+     *
+     * @param buffer array to be written
+     * @param section info memory section (memory address)
+     * @param position position in section
+     * @pararm length Length to be written
+     *
+     * @return amount of bytes copied
+     */
+    virtual uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) { return write(buffer, section, position, length, 512);}
+    uint8_t write(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length, uint16_t size);
 
-  //   void eraseSegment(uint8_t *memAddress);
+    uint8_t rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t length);
+
+    void eraseSegment(uint8_t *memAddress);
+
+    uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length);
 };
 
 #endif
