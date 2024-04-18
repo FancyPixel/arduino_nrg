@@ -64,7 +64,7 @@ class CC430FLASH
 
     void eraseSegment(uint8_t *memAddress);
 
-    uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length);
+    uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length);
 };
 
 #endif
