@@ -49,4 +49,4 @@ export SERPORT=${SERIAL_PORT}
   echo $MOTE_TYPE > $LAST_FLASHED_FOR_PATH
 #fi
 
-upload_hex -d $SERIAL_PORT -f rfloader.hex -l info
+upload_hex -d $SERIAL_PORT -f ${SCRIPT_PATH}/rfloader.hex -l info
