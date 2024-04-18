@@ -118,7 +118,7 @@ uint8_t CC430FLASH::rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t lengt
   uint16_t i = 0;
 
   __disable_interrupt();                 // 5xx Workaround: Disable global                                      
-  waitReady();
+  // waitReady();
   FCTL3 = FWKEY;                         // Clear Lock bit
   FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
 
@@ -126,7 +126,7 @@ uint8_t CC430FLASH::rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t lengt
   {
     *memAddress = buffer[i];             // Write byte in flash
     
-    waitReady();                         // Wait for write to complete
+    // waitReady();                         // Wait for write to complete
     
     if (*memAddress == buffer[i])        // Check flash contents before skipping to the next position
     {
@@ -135,7 +135,7 @@ uint8_t CC430FLASH::rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t lengt
     }
   }
 
-  waitReady();
+  // waitReady();
   FCTL1 = FWKEY;                         // Clear WRT bit
   FCTL3 = FWKEY+LOCK;                    // Set LOCK bit
   __enable_interrupt();                  // Re-enable interrupts
@@ -152,7 +152,7 @@ void CC430FLASH::eraseSegment(uint8_t *memAddress) {
   FCTL3 = FWKEY | LOCK;       // Done, set LOCK
 }
 
-uint8_t CC430FLASH::update(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
+uint8_t CC430FLASH::update(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) {
     if ((position + length) > 512) {
       return 0;                           // out of range
     }
@@ -164,7 +164,7 @@ uint8_t CC430FLASH::update(uint8_t *buffer, uint16_t section, uint16_t position,
     for (i = 0; i < 512; i++) {
       buf[i] = flashPtr[i];                // Save current contents in temporary buffer
     }
-
+    __disable_interrupt();                 // 5xx Workaround: Disable global 
     FCTL3 = FWKEY;
 
     FCTL1 = FWKEY+ERASE;                   // Set Erase bit
@@ -186,7 +186,8 @@ uint8_t CC430FLASH::update(uint8_t *buffer, uint16_t section, uint16_t position,
 
     FCTL1 = FWKEY;                         // Clear WRT bit
     FCTL3 = FWKEY+LOCK;                    // Set LOCK bit
+    __enable_interrupt();                  // Re-enable interrupts
 
     return length;
-}
+  }
 

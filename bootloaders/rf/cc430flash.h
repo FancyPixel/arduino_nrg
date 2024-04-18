@@ -105,7 +105,7 @@ class CC430FLASH
     return length;
   }
 
-  uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint8_t length) {
+  uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) {
     if ((position + length) > 512) {
       return 0;                           // out of range
     }
