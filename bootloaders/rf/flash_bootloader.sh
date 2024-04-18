@@ -4,7 +4,7 @@ LAST_FLASHED_FOR_PATH=${SCRIPT_PATH}/last_flashed_for
 
 declare -a mote_types=("modem" "bollard" "repeater" "gate" "ame")
 
-usage() { echo "Usage: $0 -t <Mote type (modem, bollard, repeater, gate, ame)> [-d <Serial device path>]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 -t <Mote type (modem, bollard, repeater, gate, ame)> -d <Serial device path>" 1>&2; exit 1; }
 while getopts t:d: option; do
     case "${option}" in
         t) MOTE_TYPE=${OPTARG};;
@@ -19,6 +19,13 @@ then
   echo "Mote type (-t) is mandatory"
   exit 1
 fi
+
+if [ -z "$SERIAL_PORT" ]
+then
+  echo "Serial device (-d) is mandatory"
+  exit 1
+fi
+
 # Check if MOTE_TYPE is supported
 found=0
 for i in "${!mote_types[@]}"
@@ -31,10 +38,6 @@ then
   exit 1
 fi
 
-if [ -z "$SERIAL_PORT" ]
-then
-  SERIAL_PORT=/dev/tty.usbserial-DA013RBN
-fi
 
 # Copy correct product.h based on MOTE_TYPE
 cp ${PRODUCT_TYPES_PATH}/${MOTE_TYPE}.h ${SCRIPT_PATH}/product.h
