@@ -62,9 +62,9 @@ int main(void) {
     delayClockCycles(5000);
   }
   // This flag will tell us whether wireless bootloader needs to start or not
-  bool *ptr1;
-  ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack
-  bool runUserCode = *ptr1;           // Read value. If "false" it means we're coming from sketch space
+//  bool *ptr1;
+//  ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack
+//  bool runUserCode = *ptr1;           // Read value. If "false" it means we're coming from sketch space
 
   // Read user code starting address
   uint16_t *ptr2;
@@ -101,11 +101,7 @@ int main(void) {
   } else {
     // Check if firmware exists
     if (userCodeAddr != 0xFFFF) {
-      if (runUserCode == false) {
-       // chiedi righe
-      } else {
-        jumpToUserCode();
-      }
+      jumpToUserCode();
     }
   } 
 
@@ -122,6 +118,7 @@ int main(void) {
     while (!correctLineReceived) {
       // Check if it's time to execute user code (flashing done)
       // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
+      neededLineNum = nextNeededLineNumber();
       if (neededLineNum >= fwLastLineNumber) {
         // Erase the vector table segment
         // A memory segment has a size of 512 bytes
@@ -148,8 +145,7 @@ int main(void) {
 
         jumpToUserCode();
       }
-            
-      neededLineNum = nextNeededLineNumber();
+
       if (requestLine) {
         LED_ON();
         // Combine fwVersion, needed line number and capabilities and query firmware line

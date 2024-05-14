@@ -232,8 +232,8 @@ class PANSTAMP
      * 
      * @param ena true for enabling the wireless bootloader
      */
-    inline void enableWirelessBoot(bool ena)
-    {
+    inline void enableWirelessBoot(bool ena) {
+
       bool * ptr;
       ptr = (bool*)RAM_END_ADDRESS;
       *ptr = !ena;
@@ -247,7 +247,10 @@ class PANSTAMP
      inline void goToWirelessBoot(void)
      {
        // Enable wireless bootloader
-       enableWirelessBoot(true);
+//       enableWirelessBoot(true);
+        FLASH flashmem;
+        uint8_t resetUserAddr[] = { 0xFF, 0xFF };
+        flashmem.update((unsigned char*)resetUserAddr, 0xFE00, 0x1BC, sizeof(resetUserAddr));
        
        // Go to wireless boot address
        void (*p)(void);
