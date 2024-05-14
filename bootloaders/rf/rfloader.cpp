@@ -87,13 +87,6 @@ int main(void) {
     flash.update((unsigned char*)FIRMWARE_VERSION, 0xFE00, 0x1B6, sizeof(FIRMWARE_VERSION));
   }
 
-   // Disable interrupts
-  __disable_interrupt();
-
-  // Init core
-  initCore();
-
-
   //  Check for factory reset
   if (checkForFactoryReset()) {
     factoryReset();
@@ -103,8 +96,13 @@ int main(void) {
     if (userCodeAddr != 0xFFFF) {
       jumpToUserCode();
     }
-  } 
+  }
 
+  // Disable interrupts
+  __disable_interrupt();
+
+  // Init core
+  initCore();
 
   TIMER1A0 timer;
 
