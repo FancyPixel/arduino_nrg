@@ -37,6 +37,7 @@ int main(void) {
   bool justFactoryReset = false;
   // ISR vector table
   uint8_t isrTable[8][16];
+  uint8_t *checkBuffer = (uint8_t*)malloc(sizeof(uint8_t) * 20);
 
   /*
    * *** IMPORTANT ***
@@ -117,8 +118,37 @@ int main(void) {
   // Pointer at the begining of user flash
   uint16_t userRomStartingAddress = USER_CODE_STARTING_ADDR;
 
-  while (1) {
+  while (1) {    
     while (!correctLineReceived) {
+      // Check if it's time to execute user code (flashing done)
+      // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
+      if (neededLineNum >= fwLastLineNumber) {
+        // Erase the vector table segment
+        // A memory segment has a size of 512 bytes
+        flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
+  
+        //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
+        // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        // FFB  0 1 2 3 4 5 6 7 8 9 A B C D E F
+        //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
+        isrTable[3][0x06] = FIRMWARE_VERSION[1];
+        isrTable[3][0x07] = FIRMWARE_VERSION[0];
+        isrTable[3][0x08] = FIRMWARE_VERSION[3];
+        isrTable[3][0x09] = FIRMWARE_VERSION[2];
+
+        isrTable[3][0x0C] = isrTable[7][0x0E];
+        isrTable[3][0x0D] = isrTable[7][0x0F];
+        isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
+        isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
+
+        // Write ISR table
+        for (uint8_t i = 0; i < sizeof(isrTable)/sizeof(isrTable[0]); i++) {
+          flash.write((uint8_t *)VECTOR_TABLE_ADDR + (i * sizeof(isrTable[i])), isrTable[i], sizeof(isrTable[i]));
+        }            
+
+        jumpToUserCode();
+      }
+            
       neededLineNum = nextNeededLineNumber();
       if (requestLine) {
         LED_ON();
@@ -150,48 +180,7 @@ int main(void) {
 
           // 2f000a0072e1694700000004 00 00 02 0064 0000 14  94000055425c0135d0085a8245ea1f3140fe2b97  9410003f4076000f9308249242ea1f5c012f839d  9a
 
-          // Packet received.
-
-          // Check if it's time to execute user code (flashing done)
-          // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
-
-          if (neededLineNum >= fwLastLineNumber) {
-            // Erase the vector table segment
-            // A memory segment has a size of 512 bytes
-            flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
-
-            // Replace their reset vector with our bootloader address
-            // this allows the user to provide their own interrupt vectors
-            // however, the gdb boot code still runs first
-            #ifdef GDB_SERIAL_BOOT
-              isrTable[7][0x0E] = 0x00;   // Serial bootloader address = 0x1000
-              isrTable[7][0x0F] = 0x10;
-
-              isrTable[3][0x0E] = 0x00;   // Wireless bootloader address = 0x8000
-              isrTable[3][0x0F] = 0x80;
-            #endif
-
-            //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
-            // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-            // FFB  0 1 2 3 4 5 6 7 8 9 A B C D E F
-            //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
-            isrTable[3][0x06] = FIRMWARE_VERSION[1];
-            isrTable[3][0x07] = FIRMWARE_VERSION[0];
-            isrTable[3][0x08] = FIRMWARE_VERSION[3];
-            isrTable[3][0x09] = FIRMWARE_VERSION[2];
-
-            isrTable[3][0x0C] = isrTable[7][0x0E];
-            isrTable[3][0x0D] = isrTable[7][0x0F];
-            isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
-            isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
-
-            // Write ISR table
-            for (uint8_t i = 0; i < sizeof(isrTable)/sizeof(isrTable[0]); i++) {
-              flash.write((uint8_t *)VECTOR_TABLE_ADDR + (i * sizeof(isrTable[i])), isrTable[i], sizeof(isrTable[i]));
-            }
-
-            jumpToUserCode();
-          }
+          // Packet received.          
 
           // Read packet and extract HEX line
           if (readHexLine()) {  // This also checks PRODUCT_CODE
@@ -291,6 +280,7 @@ int main(void) {
     finishedParsing = false;
     // While we still have lines to read...
     while(!finishedParsing && (dataLineLength > 0)) {
+      bool verifiedWrite = true;
       if (parsingFirstLine) {
         currentLineLength = dataLine[0];
 
@@ -335,10 +325,17 @@ int main(void) {
               isrTable[row][i] = 0xFF;
           }
         } else {
+          // Calculate line CRC
+          uint8_t crc = calculateCrc(dataLine + 3, currentLineLength - 4);
           // Flash firmware line
           LED_ON();
           flash.write((uint8_t *) addrFromHexFile, dataLine + 3, currentLineLength - 4);
           LED_OFF();
+          // Check written data
+          flash.read((uint8_t *) addrFromHexFile, checkBuffer, currentLineLength - 4);
+          // Add CRC          
+          checkBuffer[currentLineLength - 4] = crc;
+          verifiedWrite = checkCRC(checkBuffer, currentLineLength - 4 + 1);
         }
       } else if ((TYPE_OF_RECORD(dataLine) == RECTYPE_EOF)) { // End of file
         fwLastLineNumber = receivedLineNumber;
@@ -346,9 +343,11 @@ int main(void) {
 
       dataLine += currentLineLength; // Jump to first byte of next line
       dataLineLength -= currentLineLength;
-
+    
       // Mark line as flashed
-      markLineAsFlashed(receivedLineNumber);
+      if (verifiedWrite) {
+        markLineAsFlashed(receivedLineNumber);
+      } else triggerBOR();
     }
   }
 }

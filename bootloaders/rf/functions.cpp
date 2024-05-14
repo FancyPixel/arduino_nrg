@@ -5,18 +5,26 @@
 #include "functions.h"
 #include "utils.h"
 
+#define MIN_LINE_LEN 22
+
 GWAP gwap;
 // Global packet
 CCPACKET packet;
 CC430FLASH flash;
 uint8_t receivedLines[MAX_SKETCH_LINES / 8]; // We can support max (8 * MAX_SKETCH_LINES) lines of code for the sketch
 
-bool checkCRC(uint8_t *data, uint8_t len) {
+uint8_t calculateCrc(uint8_t *data, uint8_t len) {
   uint8_t crc = 0;
 
-  for (uint8_t i = 0; i < len - 1; i++) {
+  for (uint8_t i = 0; i < len; i++) {
     crc += data[i];
   }
+
+  return crc;
+}
+
+bool checkCRC(uint8_t *data, uint8_t len) {
+  uint8_t crc = calculateCrc(data, len - 1);
 
   if (crc == data[len - 1]) {
     return true;
@@ -60,6 +68,36 @@ void directJump() {
   // Read user code starting address
   uint16_t *ptr2 = (uint16_t*) USER_RESET_VECTOR;
   uint16_t userCodeAddr = *ptr2;
+
+  // if (userCodeAddr == 0xA000) {
+  //   for (uint8_t j = 0; j < 20; j++) {
+  //     LED_ON();
+  //     delayClockCycles(50000);
+  //     LED_OFF();
+  //     delayClockCycles(50000);
+  //   }
+  // }
+
+  // __asm__ __volatile__ (
+  //       "push 0xA000 \n"
+  //       "ret");
+
+
+  //  __asm__ (
+  //       " BR #0xA000"
+  // );
+
+  //  __asm__ (
+  //       " mov.w %0, r14          ; load user's reset_vector addr\n"
+  //       " mov.w @r14, r15        ; load the value at that vector\n"
+  //       " cmp.w #0xffff,r15      ; is there and addr there? or just erased bytes\n"
+  //       " jeq   run_gdb_boot     ; if erased, don't launch just start bootloader\n"
+  //       " mov.w @r14, r0         ; else jump to usercode, never return r0==PC\n"
+  //       "run_gdb_boot:           ;\n"
+  //       :
+  //       : "i" (USER_RESET_VECTOR)
+  //       : "cc"
+  //     );  
 
   void (*p)(void);
   p = (void (*)(void)) userCodeAddr;
@@ -192,6 +230,23 @@ void markLineAsFlashed(uint16_t lineNumber) {
   receivedLines[index] |= mask;
 }
 
+// void markLineAsRequired(uint16_t lineNumber) {
+//   uint16_t index = lineNumber / 8;
+//   uint8_t mask = 0 << (lineNumber % 8);
+//   receivedLines[index] &= mask;
+// }
+
+// void fixFailedLine(uint16_t receivedLineAddr, uint16_t userCodeAddr) {
+//   // Calculate segment to erase addr
+//   uint16_t segmentAddr = userCodeAddr + ((receivedLineAddr / 0x200) * 0x200);
+//   // Erase segment
+//   flash.eraseSegment((uint8_t *) segmentAddr);
+
+//   // Mark segment lines as not written
+//   // uint16_t startingIndex = 0;
+//   // uint16_t endingIndex = 0;  
+// }
+
 // Return the first not-already-written line number
 uint16_t nextNeededLineNumber() {
   uint16_t index, i;
@@ -214,15 +269,17 @@ uint32_t random(uint32_t min_num, uint32_t max_num) {
 bool readHexLine() {
   // Any packet waiting to be read?
   if (gwap.radio.receiveData(&packet) > 0) {
-    // Is CRC OK?
-    if (packet.crc_ok) {
-      // Function
-      if ((packet.GWAP_FUNCTION) == GWAPFUNCT_STA) {
-        // Break if packet pcode != our pcode
-        if (!gwap.hasCCPACKETMyProductCode(&packet)) return false;
-        // Firmware page received?
-        if (packet.GWAP_REGID == REGI_FWVERSION) {
-          return true;
+    if (packet.length >= MIN_LINE_LEN) {
+      // Is CRC OK?
+      if (packet.crc_ok) {
+        // Function
+        if ((packet.GWAP_FUNCTION) == GWAPFUNCT_STA) {
+          // Break if packet pcode != our pcode
+          if (!gwap.hasCCPACKETMyProductCode(&packet)) return false;
+          // Firmware page received?
+          if (packet.GWAP_REGID == REGI_FWVERSION) {
+            return true;
+          }
         }
       }
     }

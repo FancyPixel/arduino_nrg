@@ -161,6 +161,8 @@ class PANSTAMP
      */
     void reset(void);
 
+    void jumpToBootloader();
+
     /**
      * sleep
      *

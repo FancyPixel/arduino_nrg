@@ -390,6 +390,16 @@ void PANSTAMP::reset(void)
 //  while (1) {}
 }
 
+void PANSTAMP::jumpToBootloader() {
+  // Read user code starting address
+  uint16_t *ptr2 = (uint16_t*) WIRELESS_BOOT_ADDR;
+  uint16_t bootloaderAddr = *ptr2;
+
+  void (*p)(void);
+  p = (void (*)(void)) bootloaderAddr;
+  (*p)();
+}
+
 
 void PANSTAMP::enterCWMode() {
 
