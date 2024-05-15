@@ -87,6 +87,12 @@ int main(void) {
     flash.update((unsigned char*)FIRMWARE_VERSION, 0xFE00, 0x1B6, sizeof(FIRMWARE_VERSION));
   }
 
+  // Disable interrupts
+  __disable_interrupt();
+
+  // Init core
+  initCore();
+
   //  Check for factory reset
   if (checkForFactoryReset()) {
     factoryReset();
@@ -94,15 +100,12 @@ int main(void) {
   } else {
     // Check if firmware exists
     if (userCodeAddr != 0xFFFF) {
+      // Disable interrupts
+    __disable_interrupt();
       jumpToUserCode();
     }
   }
 
-  // Disable interrupts
-  __disable_interrupt();
-
-  // Init core
-  initCore();
 
   TIMER1A0 timer;
 
