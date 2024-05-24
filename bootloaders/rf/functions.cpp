@@ -36,7 +36,7 @@ bool checkCRC(uint8_t *data, uint8_t len) {
 bool checkForFactoryReset() {
   uint16_t counter = 0;
   while (IS_RESET_PIN_LOW()) {
-    if (counter >= 5000) {
+    if (counter >= 500) {
       return true;
     }
     delayMicroseconds(50000);
@@ -212,6 +212,20 @@ void initCore() {
    */
   RF1AIES = BIT0 | BIT9;
 
+
+
+   // POWER: Turn ADC and reference voltage off to conserve power
+  ADC12CTL0 &= ~ADC12ENC;
+  ADC12CTL0 &= ~ADC12ON;
+  ADC12CTL0 &= ~ADC12REFON;
+  REFCTL0 &= ~REFON;
+  REFCTL0 |= REFTCOFF;  // Temp sensor disabled
+  
+  // Config pins as outputs by default except P2, wich contains the ADC inputs
+  P1DIR = 0xFF;
+  P3DIR = 0xFF;
+  PJDIR = 0xFF;
+  
   // Config pins as outputs by default except P2, wich contains the ADC inputs
 //  P1DIR = 0xFF;
 //  P3DIR = 0xFF;

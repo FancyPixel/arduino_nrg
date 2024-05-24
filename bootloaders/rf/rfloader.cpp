@@ -61,10 +61,10 @@ int main(void) {
     LED_OFF();
     delayClockCycles(5000);
   }
-  // This flag will tell us whether wireless bootloader needs to start or not
-//  bool *ptr1;
-//  ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack
-//  bool runUserCode = *ptr1;           // Read value. If "false" it means we're coming from sketch space
+  //This flag will tell us whether wireless bootloader needs to start or not
+  bool *ptr1;
+  ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack
+  bool runUserCode = *ptr1;           // Read value. If "false" it means we're coming from sketch space
 
   // Read user code starting address
   uint16_t *ptr2;
@@ -86,26 +86,39 @@ int main(void) {
   if (bootloaderVersionH != updatedBootloaderVersionH || bootloaderVersionL != updatedBootloaderVersionL ) { 
     flash.update((unsigned char*)FIRMWARE_VERSION, 0xFE00, 0x1B6, sizeof(FIRMWARE_VERSION));
   }
-
+  
   // Disable interrupts
   __disable_interrupt();
 
-  // Init core
-  initCore();
-
-  //  Check for factory reset
+   //  Check for factory reset
   if (checkForFactoryReset()) {
+    initCore();
     factoryReset();
     justFactoryReset = true;
   } else {
     // Check if firmware exists
     if (userCodeAddr != 0xFFFF) {
-      // Disable interrupts
-    __disable_interrupt();
-      jumpToUserCode();
+      if (runUserCode == false) {
+       // chiedi righe
+      } else {
+        // Execute firmware
+        jumpToUserCode();
+      }
     }
-  }
+  } 
+   //  Check for factory reset
+  // if (checkForFactoryReset()) {
+  //   initCore();
+  //   factoryReset();
+  //   justFactoryReset = true;
+  // } else {
+  //   // Check if firmware exists
+  //   if (userCodeAddr != 0xFFFF) {
+  //     jumpToUserCode();
+  //   }
+  // } 
 
+  // initCore();
 
   TIMER1A0 timer;
 
@@ -142,9 +155,9 @@ int main(void) {
         // Write ISR table
         for (uint8_t i = 0; i < sizeof(isrTable)/sizeof(isrTable[0]); i++) {
           flash.write((uint8_t *)VECTOR_TABLE_ADDR + (i * sizeof(isrTable[i])), isrTable[i], sizeof(isrTable[i]));
-        }            
-
-        jumpToUserCode();
+        }        
+        *ptr1 = true;
+        triggerBOR();
       }
 
       if (requestLine) {
