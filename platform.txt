@@ -64,7 +64,7 @@ recipe.size.regex.data=^(?:\.data|\.bss|\.noinit)\s+([0-9]+).*
 recipe.size.regex.eeprom=^(?:\.eeprom)\s+([0-9]+).*
 
 ## Hooks
-recipe.hooks.prebuild.1.pattern=/bin/bash -c "export PATH=$HOME/.rvm/bin:$HOME/.rbenv/shims:$HOME/.asdf/shims:/$HOME/.asdf/bin:$PATH; cd {runtime.platform.path} && {runtime.platform.path}/bootloaders/rf/scripts/compile_bootloader.rb {combine} {build.source.path}"
+recipe.hooks.prebuild.1.pattern=/bin/bash -c "export PATH=$HOME/.rvm/bin:$HOME/.rbenv/shims:$HOME/.asdf/shims:/$HOME/.asdf/bin:$PATH; cd {runtime.platform.path} && {runtime.platform.path}/bootloaders/rf/scripts/compile_bootloader.rb {combine} {build.project_name}"
 recipe.hooks.postbuild.1.pattern=/bin/bash -c "export PATH=$HOME/.rvm/bin:$HOME/.rbenv/shims:$HOME/.asdf/shims:/$HOME/.asdf/bin:$PATH; cd {runtime.platform.path} && {runtime.platform.path}/bootloaders/rf/scripts/append_sketch_to_bootloader.rb {combine} {build.path}/{build.project_name}.hex"
 
 # msp430 Uploader/Programmers tools

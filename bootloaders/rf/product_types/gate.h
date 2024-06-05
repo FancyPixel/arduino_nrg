@@ -9,7 +9,7 @@ const uint8_t HARDWARE_VERSION[] = { 0, 0, 0, 1 };
 /**
  * Firmware version
  */
-const uint8_t FIRMWARE_VERSION[] = { 0, 0, 0, 1 };
+const uint8_t FIRMWARE_VERSION[] = { 0, 0, 0, 4 };
 
 /**
  * Product code
