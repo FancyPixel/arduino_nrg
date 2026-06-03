@@ -115,27 +115,23 @@ int main(void) {
   // Disable interrupts
   __disable_interrupt();
 
-   //  Check for factory reset
+  // Decide boot path: factory reset / jump to user code / OTA loop.
+  // initCore configures VCore=2, 12MHz clock and PMM HPM (all needed for the
+  // radio). It must run before reaching the OTA loop, but NOT before
+  // jumpToUserCode: the user firmware runs its own init on a clean post-BOR
+  // chip state. Calling initCore before the jump leaves the chip in a
+  // partially-configured state that breaks the user firmware startup
+  // (the "nightmare bug" fix from commit 8192d57).
   if (checkForFactoryReset()) {
     initCore();
     factoryReset();
     justFactoryReset = true;
+  } else if (userCodeAddr != 0xFFFF && runUserCode) {
+    jumpToUserCode();
   } else {
-    // Check if firmware exists
-    if (userCodeAddr != 0xFFFF) {
-      if (runUserCode == false) {
-       // chiedi righe — OTA loop path. initCore needed for radio (VCore, 12MHz, PMM HPM).
-       initCore();
-      } else {
-        // Execute firmware — no initCore: user code does its own init on a clean
-        // post-BOR chip state (see "nightmare bug" history).
-        jumpToUserCode();
-      }
-    } else {
-      // No user code in flash (cold boot, factory reset without reprovision, etc.).
-      // Fall through to OTA loop — initCore needed for radio.
-      initCore();
-    }
+    // OTA loop path: no user code in flash, or user code present but
+    // runUserCode is false (cold boot before a sketch-triggered jump).
+    initCore();
   }
    //  Check for factory reset
   // if (checkForFactoryReset()) {
@@ -174,7 +170,8 @@ int main(void) {
         // Erase the vector table segment
         // A memory segment has a size of 512 bytes
         flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);
-  
+
+        // Build the ISR table in RAM
         //      FFFFFFFFFFFFFFFFFFFFFFFF0096FFFF
         // FFB0 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         // FFB  0 1 2 3 4 5 6 7 8 9 A B C D E F
@@ -189,10 +186,22 @@ int main(void) {
         isrTable[7][0x0E] = BOOTLOADER_STARTING_ADDR & 0xFF;
         isrTable[7][0x0F] = (BOOTLOADER_STARTING_ADDR >> 8) & 0xFF;
 
-        // Write ISR table
+        // CRITICAL: write the reset vector at 0xFFFE FIRST after erase. A power
+        // loss after this point leaves the MCU bootable (reset vector points to
+        // the bootloader), so the next boot detects the incomplete VT via
+        // isVectorTableValid and restores from the backup. Without this, the
+        // for loop below would write row 7 (which contains 0xFFFE) LAST,
+        // leaving 0xFFFE = 0xFFFF for the whole ms-long rewrite window — and
+        // a power loss there leaves the board permanently un-bootable until
+        // a manual BSL reflash.
+        flash.write((uint8_t *)GDB_BOOT_RESET_VECTOR, &isrTable[7][0x0E], 2);
+
+        // Write the rest of the ISR table. Row 7 includes the reset vector at
+        // bytes 0x0E-0x0F: re-writing those is harmless (same value, no bit
+        // transition).
         for (uint8_t i = 0; i < sizeof(isrTable)/sizeof(isrTable[0]); i++) {
           flash.write((uint8_t *)VECTOR_TABLE_ADDR + (i * sizeof(isrTable[i])), isrTable[i], sizeof(isrTable[i]));
-        }        
+        }
         *ptr1 = true;
         triggerBOR();
       }
