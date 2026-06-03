@@ -2,6 +2,7 @@
 #include "rfloader.h"
 #include "functions.h"
 #include "utils.h"
+#include "vectorTableBackup.h"
 
 //#define DEBUG true
 
@@ -61,6 +62,27 @@ int main(void) {
     LED_OFF();
     delayClockCycles(5000);
   }
+
+  // ===== Vector table integrity check =====
+  // If the previous boot was interrupted during a vector table rewrite
+  // (goToWirelessBoot, OTA finalization, BL version update), the segment
+  // at 0xFE00-0xFFFF may be partially erased/written. Detect this by
+  // checking the reset vector at 0xFFFE and the BL version at 0xFFB6.
+  // If invalid, restore from the backup at 0xFC00-0xFDFF.
+  if (!isVectorTableValid()) {
+    if (isVectorTableBackupValid()) {
+      // Backup is good — restore main vector table from it. restoreVectorTable
+      // stamps the BL version in the same erase+write cycle, so the restored
+      // main is immediately valid (no restore -> BOR -> restore loop).
+      restoreVectorTable();
+      // Reboot cleanly so all subsequent reads see a consistent state.
+      triggerBOR();
+    }
+    // else: both main and backup are corrupted. Fall through and try
+    // to enter the OTA/factory-reset path so the device can be recovered
+    // by reflashing.
+  }
+
   //This flag will tell us whether wireless bootloader needs to start or not
   bool *ptr1;
   ptr1 = (bool*) RAM_END_ADDRESS;   // Memory address at the end of the stack
@@ -83,7 +105,10 @@ int main(void) {
   uint16_t updatedBootloaderVersionH = (FIRMWARE_VERSION[0] << 8) | FIRMWARE_VERSION[1];
   uint16_t updatedBootloaderVersionL = (FIRMWARE_VERSION[2] << 8) | FIRMWARE_VERSION[3];
 
-  if (bootloaderVersionH != updatedBootloaderVersionH || bootloaderVersionL != updatedBootloaderVersionL ) { 
+  if (bootloaderVersionH != updatedBootloaderVersionH || bootloaderVersionL != updatedBootloaderVersionL ) {
+    // Backup before destructive update — power loss during flash.update would
+    // otherwise corrupt the BSL password and reset vector permanently.
+    backupVectorTable();
     flash.update((unsigned char*)FIRMWARE_VERSION, 0xFE00, 0x1B6, sizeof(FIRMWARE_VERSION));
   }
   
@@ -99,13 +124,19 @@ int main(void) {
     // Check if firmware exists
     if (userCodeAddr != 0xFFFF) {
       if (runUserCode == false) {
-       // chiedi righe
+       // chiedi righe — OTA loop path. initCore needed for radio (VCore, 12MHz, PMM HPM).
+       initCore();
       } else {
-        // Execute firmware
+        // Execute firmware — no initCore: user code does its own init on a clean
+        // post-BOR chip state (see "nightmare bug" history).
         jumpToUserCode();
       }
+    } else {
+      // No user code in flash (cold boot, factory reset without reprovision, etc.).
+      // Fall through to OTA loop — initCore needed for radio.
+      initCore();
     }
-  } 
+  }
    //  Check for factory reset
   // if (checkForFactoryReset()) {
   //   initCore();
@@ -134,6 +165,12 @@ int main(void) {
       // We must jump to user code if we already received the last line, and the next needed line number is greater than last firmware line
       neededLineNum = nextNeededLineNumber();
       if (neededLineNum >= fwLastLineNumber) {
+        // Backup the current vector table BEFORE the destructive erase.
+        // If power is lost between this point and the end of the rewrite,
+        // the next bootloader boot will detect the corruption and restore
+        // from VECTOR_TABLE_BACKUP_SEGMENT.
+        backupVectorTable();
+
         // Erase the vector table segment
         // A memory segment has a size of 512 bytes
         flash.eraseSegment((uint8_t *) VECTOR_TABLE_SEGMENT);

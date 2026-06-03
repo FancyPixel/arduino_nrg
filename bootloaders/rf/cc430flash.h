@@ -122,6 +122,7 @@ class CC430FLASH
 
     FCTL1 = FWKEY+ERASE;                   // Set Erase bit
     *flashPtr = 0;                         // Dummy write to erase Flash seg
+    waitReady();                           // Wait for erase to finish before writing
     FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
 
     for (i = 0; i < 512; i++) {

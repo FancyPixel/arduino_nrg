@@ -8,8 +8,12 @@ const uint8_t HARDWARE_VERSION[] = { 0, 0, 0, 1 };
 
 /**
  * Firmware version
+ *
+ * v5 (2026-04): vector table backup/restore to survive power loss during
+ *               OTA finalization, BL version update, and goToWirelessBoot.
+ *               See vectorTableBackup.h.
  */
-const uint8_t FIRMWARE_VERSION[] = { 0, 0, 0, 4 };
+const uint8_t FIRMWARE_VERSION[] = { 0, 0, 0, 5 };
 
 /**
  * Product code
