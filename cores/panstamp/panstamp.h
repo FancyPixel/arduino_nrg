@@ -240,6 +240,27 @@ class PANSTAMP
     }
 
     /**
+     * backupVectorTableSegment
+     *
+     * Copy the vector table segment (0xFE00-0xFFFF) into the backup segment
+     * (0xFC00-0xFDFF). Must be called BEFORE any operation that
+     * erases/rewrites the vector table segment, so that on power loss the
+     * bootloader can restore the corrupted vector table from this copy.
+     */
+    inline void backupVectorTableSegment(FLASH& flashmem) {
+      uint8_t buf[512];
+      uint8_t* src = (uint8_t*)VECTOR_TABLE_SEGMENT;
+      for (uint16_t i = 0; i < 512; i++) buf[i] = src[i];
+
+      flashmem.eraseSegment((uint8_t*)VECTOR_TABLE_BACKUP_SEGMENT);
+
+      // rawWrite has uint8_t length (max 255), so split into 3 chunks
+      flashmem.rawWrite((uint8_t*)(VECTOR_TABLE_BACKUP_SEGMENT +   0), buf +   0, 200);
+      flashmem.rawWrite((uint8_t*)(VECTOR_TABLE_BACKUP_SEGMENT + 200), buf + 200, 200);
+      flashmem.rawWrite((uint8_t*)(VECTOR_TABLE_BACKUP_SEGMENT + 400), buf + 400, 112);
+    }
+
+    /**
      * goToWirelessBoot
      *
      * Start wireless bootloader
@@ -249,13 +270,19 @@ class PANSTAMP
        // Enable wireless bootloader
 //       enableWirelessBoot(true);
         FLASH flashmem;
+
+        // Backup the current vector table BEFORE the destructive update().
+        // If power is lost during update(), the bootloader will restore from
+        // this backup at next boot.
+        backupVectorTableSegment(flashmem);
+
         uint8_t resetUserAddr[] = { 0xFF, 0xFF };
         flashmem.update((unsigned char*)resetUserAddr, 0xFE00, 0x1BC, sizeof(resetUserAddr));
-       
+
        // Go to wireless boot address
        void (*p)(void);
        p = (void (*)(void))WIRELESS_BOOT_ADDR;
-       (*p)(); 
+       (*p)();
      }
 
     /**

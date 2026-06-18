@@ -68,6 +68,10 @@ const uint16_t INFOMEM_SECTIO_D  = 0x1800;
  */
 
 const uint16_t VECTOR_TABLE_SEGMENT   = 0xFE00;     // Flash segment address containing isr vectors
+// Backup copy of the vector table — written before any destructive op on
+// VECTOR_TABLE_SEGMENT. If main vector table is corrupted at boot
+// (power loss during update), the bootloader restores from this copy.
+const uint16_t VECTOR_TABLE_BACKUP_SEGMENT = 0xFC00; // Highest free flash segment (firmware ends ~0xEBED)
 const uint16_t VECTOR_TABLE_ADDR      = 0xFF80;     // Starting address containing isr vectors
 const uint16_t USER_RESET_VECTOR      = 0xFFBC;     // Flash location that stores user's reset vector
 const uint16_t FACTORY_RESET_VECTOR   = 0xFFBA;     // Flash location that stores factory reset vector

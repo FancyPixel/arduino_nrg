@@ -122,7 +122,21 @@ class CC430FLASH
 
     FCTL1 = FWKEY+ERASE;                   // Set Erase bit
     *flashPtr = 0;                         // Dummy write to erase Flash seg
+    waitReady();                           // Wait for erase to finish before writing
     FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
+
+    // CRITICAL: write offset 0x1FE-0x1FF (reset vector when section==0xFE00)
+    // FIRST after erase. A power loss after this point leaves the MCU bootable
+    // (reset vector still pointing to the bootloader, copied from the pre-update
+    // segment in buf), so the next boot detects the incomplete VT and restores
+    // from the backup. Without this, the loop below writes 0x1FE last and the
+    // whole ms-long rewrite window leaves the board un-bootable on power loss.
+    // For non-VT segments this is harmless: 0x1FE-0x1FF is restored from buf
+    // exactly as it was, and the loop's redundant write at i==0x1FE is a no-op.
+    *((char *)(section + 0x1FE)) = buf[0x1FE];
+    waitReady();
+    *((char *)(section + 0x1FF)) = buf[0x1FF];
+    waitReady();
 
     for (i = 0; i < 512; i++) {
       if (i == position) {

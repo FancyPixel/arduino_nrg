@@ -181,26 +181,31 @@ public:
     void nvolatToFactoryDefaults() {
       CC430INFO infoMem;
 
+      // Single atomic erase+write of the full 128-byte INFOMEM_D segment.
+      // The previous implementation performed five separate write() calls,
+      // each of which erases and rewrites the whole segment, multiplying
+      // the concurrent-write corruption window by 5.
+      uint8_t buf[0x80];
+      memset(buf, 0xFF, sizeof(buf));
+
       // Signature
-      uint8_t signature[] = { NVOLAT_SIGNATURE_HIGH, NVOLAT_SIGNATURE_LOW };
-      infoMem.write(signature, INFOMEM_CONFIG, NVOLAT_SIGNATURE, sizeof(signature));
+      buf[NVOLAT_SIGNATURE]     = NVOLAT_SIGNATURE_HIGH;
+      buf[NVOLAT_SIGNATURE + 1] = NVOLAT_SIGNATURE_LOW;
 
       // Frequency channel
-      uint8_t channel[] = {CCDEF_CHANNR};
-      infoMem.write(channel, INFOMEM_CONFIG, NVOLAT_FREQ_CHANNEL, sizeof(channel));
+      buf[NVOLAT_FREQ_CHANNEL]  = CCDEF_CHANNR;
 
       // Sync word
-      uint8_t syncW[] = {CCDEF_SYNC1, CCDEF_SYNC0};
-      infoMem.write(syncW, INFOMEM_CONFIG, NVOLAT_SYNC_WORD, sizeof(syncW));
+      buf[NVOLAT_SYNC_WORD]     = CCDEF_SYNC1;
+      buf[NVOLAT_SYNC_WORD + 1] = CCDEF_SYNC0;
 
       // TX interval
-      uint8_t txInt[] = {0xFF, 0};
-      infoMem.write(txInt, INFOMEM_CONFIG, NVOLAT_TX_INTERVAL, sizeof(txInt));
+      buf[NVOLAT_TX_INTERVAL]     = 0xFF;
+      buf[NVOLAT_TX_INTERVAL + 1] = 0;
 
-      // Reset all remaining values in INFOMEM_FIRST_CUSTOM
-      uint8_t unos[0x60];
-      memset(unos, 0xFF, 0x60);  // INFOMEM_D size is 0x80. INFOMEM_FIRST_CUSTOM is 0x20 so 0x80 - 0x20 => 0x60
-      infoMem.write(unos, INFOMEM_CONFIG, NVOLAT_FIRST_CUSTOM, sizeof(unos));
+      // NVOLAT_FIRST_CUSTOM..0x7F is already 0xFF from memset
+
+      infoMem.write(buf, INFOMEM_CONFIG, 0, sizeof(buf));
     }
 };
 
