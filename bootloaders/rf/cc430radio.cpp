@@ -73,8 +73,8 @@ void CC430RADIO::setCCregs(void)
   WriteSingleReg(FOCCFG,  CCDEF_FOCCFG);
   WriteSingleReg(BSCFG,  CCDEF_BSCFG);
   WriteSingleReg(AGCCTRL2,  CCDEF_AGCCTRL2);
-  WriteSingleReg(AGCCTRL1,  CCDEF_AGCCTRL2);
-  WriteSingleReg(AGCCTRL0,  CCDEF_AGCCTRL2);
+  WriteSingleReg(AGCCTRL1,  CCDEF_AGCCTRL1);
+  WriteSingleReg(AGCCTRL0,  CCDEF_AGCCTRL0);
   WriteSingleReg(FREND1,  CCDEF_FREND1);
   WriteSingleReg(FREND0,  CCDEF_FREND0);
   WriteSingleReg(FSCAL3,  CCDEF_FSCAL3);
