@@ -380,6 +380,16 @@ int main(void) {
             else
               isrTable[row][i] = 0xFF;
           }
+        } else if (currentLineLength < 4 ||
+                   addrFromHexFile < userRomStartingAddress ||
+                   (uint32_t) addrFromHexFile + (currentLineLength - 4) > VECTOR_TABLE_ADDR) {
+          // #6/#7 guard: a DATA line needs >=4 bytes (addr[2]+type[1]+crc[1]);
+          // shorter makes 'currentLineLength - 4' underflow (uint8_t) into a
+          // ~252-byte flash.write. And a malformed/rogue address must never be
+          // written outside the user-code flash window (it would clobber the
+          // bootloader or the vector table). Refuse the write: verifiedWrite
+          // stays false -> safe BOR + line re-request, no flash corruption.
+          verifiedWrite = false;
         } else {
           // Calculate line CRC
           uint8_t crc = calculateCrc(dataLine + 3, currentLineLength - 4);
@@ -389,7 +399,7 @@ int main(void) {
           LED_OFF();
           // Check written data
           flash.read((uint8_t *) addrFromHexFile, checkBuffer, currentLineLength - 4);
-          // Add CRC          
+          // Add CRC
           checkBuffer[currentLineLength - 4] = crc;
           verifiedWrite = checkCRC(checkBuffer, currentLineLength - 4 + 1);
         }
