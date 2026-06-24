@@ -79,8 +79,11 @@ class CC430FLASH
 
   uint8_t write(uint8_t *memAddress, uint8_t *buffer, uint8_t length)
   {
+    const uint8_t MAX_RETRIES = 8;
     uint16_t i = 0;
-                                          
+    uint8_t retries = 0;
+    uint8_t written = 0;
+
     waitReady();
     FCTL3 = FWKEY;                         // Clear Lock bit
     FCTL1 = FWKEY+WRT;                     // Set WRT bit for byte write operation
@@ -88,13 +91,19 @@ class CC430FLASH
     while (i < length)
     {
       *memAddress = buffer[i];             // Write byte in flash
-      
+
       waitReady();                         // Wait for write to complete
-      
+
       if (*memAddress == buffer[i])        // Check flash contents before skipping to the next position
       {
         memAddress++;
         i++;
+        retries = 0;
+        written++;
+      }
+      else if (++retries >= MAX_RETRIES)   // Bail out instead of looping forever on a stuck/unwritable
+      {                                    // byte (the bootloader has no watchdog). The line CRC check
+        break;                             // then fails -> safe BOR + re-request, no permanent hang.
       }
     }
 
@@ -102,7 +111,7 @@ class CC430FLASH
     FCTL1 = FWKEY;                         // Clear WRT bit
     FCTL3 = FWKEY+LOCK;                    // Set LOCK bit
 
-    return length;
+    return written;
   }
 
   uint8_t update(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) {
