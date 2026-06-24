@@ -129,6 +129,14 @@ void CC430CORE::setNormalMode(void)
 	// Configure PMM and SCLK for RF operation
   _SET_VCORE_12MHZ(2);
   
+  // UCS11 erratum: after waking from LPM the oscillator fault flags can be
+  // stale; clear them (and OFIFG) until they stay clear, like init() does, so a
+  // spurious fault doesn't leave the clock in a faulted state.
+  do {
+    UCSCTL7 &= ~(XT2OFFG + XT1LFOFFG + XT1HFOFFG + DCOFFG);
+    SFRIFG1 &= ~OFIFG;
+  } while ((SFRIFG1 & OFIFG));
+
   // Enable WDT again
   enableWatchDog();
 

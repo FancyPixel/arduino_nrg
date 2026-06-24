@@ -415,7 +415,9 @@ bool CC430RADIO::sendData(CCPACKET packet)
   // Wait until packet transmission
   while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
 
-  if (count <= 0) {
+  // Timeout = GDO0 never fired. Test that directly: 'count' is uint16_t, so the
+  // loop underflows it to 0xFFFF on timeout and 'count <= 0' is never true.
+  if (!MRFI_GDO0_INT_FLAG_IS_SET()) {
     setIdleState();       // Enter IDLE state
     flushTxFifo();        // Flush Tx FIFO
     res = false;
