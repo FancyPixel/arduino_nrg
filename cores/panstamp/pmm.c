@@ -41,8 +41,12 @@ void SetVCoreUp (unsigned char level)        // Note: change level by one step o
 
   SVSMLCTL = SVSLE + SVMLE + SVSMLRRL0 * level;     // Set SVM new Level    
   while ((PMMIFG & SVSMLDLYIFG) == 0);      // Wait till SVM is settled (Delay)
-  PMMCTL0_L = PMMCOREV0 * level;            // Set VCore to x
+  // PMM15 erratum workaround: clear the level/voltage flags BEFORE raising
+  // VCore, not after. Clearing them after the write can wipe the freshly-set
+  // SVMLVLRIFG, so the "wait till level reached" below may fall through before
+  // the core voltage has actually settled. This matches TI's reference sequence.
   PMMIFG &= ~(SVMLVLRIFG + SVMLIFG);        // Clear already set flags
+  PMMCTL0_L = PMMCOREV0 * level;            // Set VCore to x
   if ((PMMIFG & SVMLIFG))
     while ((PMMIFG & SVMLVLRIFG) == 0);     // Wait till level is reached
  
