@@ -153,6 +153,9 @@ uint16_t getTargetAddress(uint8_t *line) {
 
 // Return @true if the line has already been flashed
 bool hasLineBeenFlashed(uint16_t lineNumber) {
+  // Bounds-check the OTA line number: a malformed packet could pass a line
+  // beyond MAX_SKETCH_LINES and index receivedLines[] out of bounds.
+  if (lineNumber >= MAX_SKETCH_LINES) return false;
   uint16_t index = lineNumber / 8;
   uint8_t mask = 1 << (lineNumber % 8);
   return (receivedLines[index] & mask) != 0;
@@ -239,6 +242,9 @@ void jumpToUserCode() {
 
 // Mark a line as already flashed
 void markLineAsFlashed(uint16_t lineNumber) {
+  // Bounds-check: ignore an out-of-range line so a malformed packet can't write
+  // past receivedLines[].
+  if (lineNumber >= MAX_SKETCH_LINES) return;
   uint16_t index = lineNumber / 8;
   uint8_t mask = 1 << (lineNumber % 8);
   receivedLines[index] |= mask;
