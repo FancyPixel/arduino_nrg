@@ -155,12 +155,17 @@ uint8_t CC430FLASH::rawWrite(uint8_t *memAddress, uint8_t *buffer, uint8_t lengt
 
 
 void CC430FLASH::eraseSegment(uint8_t *memAddress) {
+  // FLASH31 erratum: an interrupt serviced during a flash erase (its vector
+  // fetch / ISR accesses flash) can corrupt the operation. Block interrupts for
+  // the duration, exactly like update() already does for its erase/write.
+  __disable_interrupt();
   waitReady();
   FCTL3 = FWKEY;              // Clear LOCK
   FCTL1 = FWKEY | ERASE;      // Enable segment erase
   *memAddress = 0;            // Dummy write, erase Segment
   waitReady();
   FCTL3 = FWKEY | LOCK;       // Done, set LOCK
+  __enable_interrupt();
 }
 
 uint8_t CC430FLASH::update(uint8_t *buffer, uint16_t section, uint16_t position, uint16_t length) {
