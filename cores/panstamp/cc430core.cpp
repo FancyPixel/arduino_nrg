@@ -101,11 +101,16 @@ void CC430CORE::setLowPowerMode(bool lpm4, uint32_t rtcTicks)
     _SET_VCORE_1MHZ(0);
   }
 
-  // Turn off SVSH, SVSM
-  PMMCTL0_H = 0xA5;
-  SVSMHCTL = 0;
-  SVSMLCTL = 0;
-  PMMCTL0_H = 0x00;
+  // PMM15 erratum (SLAZ094): writing SVSMHCTL/SVSMLCTL and then entering LPM
+  // before the SVSM settling delay completes can leave the device unable to
+  // wake. The previous code turned off SVSH/SVSM right here and dropped straight
+  // into LPM, which is exactly that condition (a rare but real missed wake-up,
+  // and the watchdog is off in sleep). Option B: leave the supply monitors
+  // untouched so there is no settling window to race into LPM. They stay active
+  // during sleep, costing about +0.8 uA, in exchange for a guaranteed wake-up.
+  // (Option C, disabling only the low-side SVS with the high-side in fast mode,
+  // would recover that current but needs the DriverLib PMM sequence and more
+  // testing; revisit only if the sleep budget requires it.)
 
   if (lpm4)
   {
