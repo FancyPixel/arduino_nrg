@@ -147,8 +147,8 @@ void CC430RADIO::setCCregs(void)
   WriteSingleReg(FOCCFG,  CCDEF_FOCCFG);
   WriteSingleReg(BSCFG,  CCDEF_BSCFG);
   WriteSingleReg(AGCCTRL2,  CCDEF_AGCCTRL2);
-  WriteSingleReg(AGCCTRL1,  CCDEF_AGCCTRL2);
-  WriteSingleReg(AGCCTRL0,  CCDEF_AGCCTRL2);
+  WriteSingleReg(AGCCTRL1,  CCDEF_AGCCTRL1);
+  WriteSingleReg(AGCCTRL0,  CCDEF_AGCCTRL0);
   WriteSingleReg(FREND1,  CCDEF_FREND1);
   WriteSingleReg(FREND0,  CCDEF_FREND0);
   WriteSingleReg(FSCAL3,  CCDEF_FSCAL3);
@@ -415,7 +415,9 @@ bool CC430RADIO::sendData(CCPACKET packet)
   // Wait until packet transmission
   while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
 
-  if (count <= 0) {
+  // Timeout = GDO0 never fired. Test that directly: 'count' is uint16_t, so the
+  // loop underflows it to 0xFFFF on timeout and 'count <= 0' is never true.
+  if (!MRFI_GDO0_INT_FLAG_IS_SET()) {
     setIdleState();       // Enter IDLE state
     flushTxFifo();        // Flush Tx FIFO
     res = false;
