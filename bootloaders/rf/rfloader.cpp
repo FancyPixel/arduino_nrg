@@ -6,7 +6,7 @@
 
 //#define DEBUG true
 
-#define WORKING_MODE MODE_38400
+#define WORKING_MODE MODE_4800
 
 extern GWAP gwap;
 // Global packet

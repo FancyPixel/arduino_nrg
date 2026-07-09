@@ -68,7 +68,10 @@ void CC430RADIO::setCCregs(void)
   WriteSingleReg(MDMCFG2,  CCDEF_MDMCFG2);
   WriteSingleReg(MDMCFG1,  CCDEF_MDMCFG1);
   WriteSingleReg(MDMCFG0,  CCDEF_MDMCFG0);
-  WriteSingleReg(DEVIATN,  CCDEF_DEVIATN);
+  if (workMode == MODE_4800)
+    WriteSingleReg(DEVIATN,  CCDEF_DEVIATN_4800);
+  else
+    WriteSingleReg(DEVIATN,  CCDEF_DEVIATN);
   WriteSingleReg(MCSM0,  CCDEF_MCSM0);
   WriteSingleReg(FOCCFG,  CCDEF_FOCCFG);
   WriteSingleReg(BSCFG,  CCDEF_BSCFG);
@@ -101,7 +104,7 @@ bool CC430RADIO::sendData(CCPACKET packet)
 {
   bool res = false;
   uint8_t marcState;
-  uint16_t count;
+  uint32_t count;
 
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
   MRFI_CLEAR_GDO0_INT_FLAG();
@@ -142,11 +145,15 @@ bool CC430RADIO::sendData(CCPACKET packet)
   }
 
   delayMicroseconds(250);
-  count = 0xFFFF;
+  // Generous TX-complete timeout, sized for the slowest case (4800 bps). count
+  // is uint32_t now.
+  count = 0x7FFFF;
   // Wait until packet transmission
   while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
 
-  if (!count)
+  // Test GDO0 directly: on timeout 'count' underflows, so '!count' would never
+  // be true (same bug already fixed in the core). Detect the real timeout here.
+  if (!MRFI_GDO0_INT_FLAG_IS_SET())
   {
     setIdleState();       // Enter IDLE state
     flushTxFifo();        // Flush Tx FIFO

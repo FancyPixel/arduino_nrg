@@ -63,14 +63,15 @@ enum RFSTATE
 #define CCDEF_FREQ2_433  0x10   // Frequency Control Word, High Byte
 #define CCDEF_FREQ1_433  0xA7   // Frequency Control Word, Middle Byte
 #define CCDEF_FREQ0_433  0x62   // Frequency Control Word, Low Byte
-#define CCDEF_MDMCFG4_4800    0xC7   // Modem configuration. Speed = 4800 bps
+#define CCDEF_MDMCFG4_4800    0xE7   // Speed 4800 bps + banda RX ~67.7 kHz (era 0xC7 = ~102 kHz). Narrow-band, allineato al core. Da misurare.
 #define CCDEF_MDMCFG4_38400    0xCA   // Modem configuration. Speed = 38 Kbps
 #define CCDEF_MDMCFG3    0x83   // Modem configuration.
 #define CCDEF_MDMCFG2    0x92   // Modem configuration.
 #define CCDEF_MDMCFG1    0x22   // Modem configuration.
 #define CCDEF_MDMCFG0    0xF8   // Modem configuration.
 #define CCDEF_CHANNR     0x00   // Channel number.
-#define CCDEF_DEVIATN    0x35   // Modem deviation setting (when FSK modulation is enabled).
+#define CCDEF_DEVIATN    0x35   // Modem deviation setting (FSK), modo 38400 (~20.6 kHz).
+#define CCDEF_DEVIATN_4800   0x15   // Deviazione ~5.2 kHz per 4800 narrow-band, allineato al core.
 #define CCDEF_FREND1     0x56   // Front end RX configuration.
 #define CCDEF_FREND0     0x10   // Front end TX configuration.
 #define CCDEF_MCSM0      0x18   // Main Radio Control State Machine configuration.
