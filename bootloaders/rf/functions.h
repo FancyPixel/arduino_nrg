@@ -55,8 +55,10 @@
 
 #define GWAP_QUERY_BYTES_COUNT 6
 
-// Responses from server have to be received before 200 ms after sending the query
-#define RESPONSE_TIMEOUT 500
+// Max wait for a firmware page from the concentrator (bootloader-side OTA).
+// Sized for 4800 bps + up to 8 coordinated gateways (highest slot answers at
+// ~7*slotWidthMs). Hardware cap ~2000 ms (16-bit TA1CCR0 @ ACLK 32.768 kHz).
+#define RESPONSE_TIMEOUT 1500
 #define MAX_FAILED_LINE_REQUESTS 3
 
 #define MAX_SKETCH_LINES 1600

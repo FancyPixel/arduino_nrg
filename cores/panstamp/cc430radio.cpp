@@ -142,7 +142,10 @@ void CC430RADIO::setCCregs(void)
   WriteSingleReg(MDMCFG2,  CCDEF_MDMCFG2);
   WriteSingleReg(MDMCFG1,  CCDEF_MDMCFG1);
   WriteSingleReg(MDMCFG0,  CCDEF_MDMCFG0);
-  WriteSingleReg(DEVIATN,  CCDEF_DEVIATN);
+  if (workMode == MODE_LOW_SPEED)
+    WriteSingleReg(DEVIATN,  CCDEF_DEVIATN_4800);
+  else
+    WriteSingleReg(DEVIATN,  CCDEF_DEVIATN);
   WriteSingleReg(MCSM0,  CCDEF_MCSM0);
   WriteSingleReg(FOCCFG,  CCDEF_FOCCFG);
   WriteSingleReg(BSCFG,  CCDEF_BSCFG);
@@ -369,7 +372,7 @@ bool CC430RADIO::sendData(CCPACKET packet)
 {
   bool res = false;
   uint8_t marcState;
-  uint16_t count;
+  uint32_t count;
 
   MRFI_CLEAR_SYNC_PIN_INT_FLAG();
   MRFI_CLEAR_GDO0_INT_FLAG();
@@ -411,12 +414,18 @@ bool CC430RADIO::sendData(CCPACKET packet)
   }
 
   delayMicroseconds(250);
-  count = 0xFFFF;
+  // Generous TX-complete timeout, sized for the slowest case (4800 bps): a full
+  // unicum (~40+ byte) takes ~80-100 ms on air at 4800, vs ~10-15 ms at 38400.
+  // The old uint16_t 0xFFFF busy-wait expired before the packet finished at
+  // 4800, aborting the TX (flushTxFifo) so the unicum was never sent and the
+  // sensor stayed "no data". count is uint32_t now; this value still bounds the
+  // wait (~hundreds of ms) so a stuck GDO0 is detected, just with margin.
+  count = 0x7FFFF;
   // Wait until packet transmission
   while(!MRFI_GDO0_INT_FLAG_IS_SET() && count--);
 
-  // Timeout = GDO0 never fired. Test that directly: 'count' is uint16_t, so the
-  // loop underflows it to 0xFFFF on timeout and 'count <= 0' is never true.
+  // Timeout = GDO0 never fired. Test GDO0 directly (do not rely on count, whose
+  // post-loop value depends on its width).
   if (!MRFI_GDO0_INT_FLAG_IS_SET()) {
     setIdleState();       // Enter IDLE state
     flushTxFifo();        // Flush Tx FIFO
