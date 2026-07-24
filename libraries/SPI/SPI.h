@@ -18,7 +18,7 @@
 #include <inttypes.h>
 
 #if defined(__MSP430_HAS_USI__) || defined(__MSP430_HAS_USCI_B0__) || defined(__MSP430_HAS_USCI_B1__) || defined(__MSP430_HAS_USCI__) || defined(__MSP430_HAS_EUSCI_B0__) || defined(__MSP430_HAS_EUSCI_B1__) || defined(__MSP430_HAS_EUSCI_B2__) || defined(__MSP430_HAS_EUSCI_B3__) || defined(DEFAULT_SPI)
-#include "utility/spi_430.h"
+#include "spi_430.h"
 #endif
 
 #define SPI_MODE0 0
